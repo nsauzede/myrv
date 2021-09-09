@@ -37,23 +37,48 @@ int rv_execute(rv_ctx *ctx) {
   if (ctx->pc % 4) {
     return 2;
   }
+  printf("%08" PRIx32 ": ", ctx->pc);
   if (rv_fetch(ctx)) {
     return 1;
   }
   rv_print_insn(ctx->last_insn);
   uint8_t opc = ctx->last_insn & 0x7f;
-  uint32_t funct3 = (ctx->last_insn & 0x7000) >> 12;
+  uint8_t rd = (ctx->last_insn & 0xf80) >> 7;
+  uint8_t funct3 = (ctx->last_insn & 0x7000) >> 12;
+  uint8_t rs1 = (ctx->last_insn & 0xf8000) >> 15;
+  uint8_t rs2 = (ctx->last_insn & 0x1f00000) >> 20;
+  uint8_t funct7 = (ctx->last_insn & 0xfe000000) >> 25;
   switch (opc) {
   case 0x13:
     printf("OP-IMM");
     switch (funct3) {
     case 0x01:
-      printf(" SLLI (%" PRIx32 ")", funct3);
+      printf(" SLLI rd=%" PRIx8 " funct3=%" PRIx8 " rs1=%" PRIx8, rd, funct3, rs1);
       break;
     default:
       return 1;
     }
     printf("\n");
+    break;
+  case 0x33:
+    printf("OP");
+    switch (funct3) {
+    case 0x00:
+      switch (funct7) {
+      case 0x20:
+        printf(" SUB rd=%" PRIx8 " funct3=%" PRIx8 " rs1=%" PRIx8 " rs2=%" PRIx8, rd, funct3, rs1, rs2);
+        break;
+      default:
+        return 1;
+      }
+      break;
+    default:
+      return 1;
+    }
+    printf("\n");
+    break;
+  case 0x67:
+    printf("JALR rd=%" PRIx8 " rs1=%" PRIx8 "\n", rd, rs1);
     break;
   case 0x73:
     printf("BREAK\n");

@@ -7,9 +7,13 @@ uint32_t rv_read32(uint32_t addr) {
   //   printf("blah\n");
   switch (addr) {
   case 0:
-    return 0x00351793;
+    return 0x00351793; // slli a5,a0,0x3
+  case 4:
+    return 0x40a78533; // sub a0,a5,a0
+  case 8:
+    return 0x00008067; // jalr ?? (ret)
   default:
-    return 0x00000073;
+    return 0x00000073; // break
   }
 }
 
@@ -26,7 +30,11 @@ int rv_test() {
   assert(0x00351793 == ctx.last_insn);
   assert(4 == ctx.pc); // test incremented PC
   assert(0 == rv_execute(&ctx));
-  assert(0x73 == ctx.last_insn);
+  assert(0x40a78533 == ctx.last_insn);
+  assert(0 == rv_execute(&ctx));
+  assert(0x00008067 == ctx.last_insn);
+  assert(0 == rv_execute(&ctx));
+  assert(0x00000073 == ctx.last_insn);
 
   printf("RV Test OK\n");
   return 0;
