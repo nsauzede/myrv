@@ -4,12 +4,12 @@
 #include "rv.h"
 
 uint32_t rv_read32(uint32_t addr) {
-//   printf("blah\n");
+  //   printf("blah\n");
   switch (addr) {
   case 0:
     return 0x00351793;
   default:
-    return 0xffffffff;
+    return 0x00000073;
   }
 }
 
@@ -26,7 +26,7 @@ int rv_test() {
   assert(0x00351793 == ctx.last_insn);
   assert(4 == ctx.pc); // test incremented PC
   assert(0 == rv_execute(&ctx));
-  assert(0xffffffff == ctx.last_insn);
+  assert(0x73 == ctx.last_insn);
 
   printf("RV Test OK\n");
   return 0;

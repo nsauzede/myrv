@@ -1,7 +1,7 @@
 #include <inttypes.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "rv.h"
 
@@ -26,8 +26,8 @@ int rv_fetch(rv_ctx *ctx) {
 }
 
 int rv_print_insn(uint32_t insn) {
-	uint8_t opc = insn & 0x7f;
-	printf("INSN=0x%08" PRIx32 " OPC=0x%02" PRIx8 "\n", insn, opc);
+  uint8_t opc = insn & 0x7f;
+  printf("INSN=0x%08" PRIx32 " OPC=0x%02" PRIx8 "\n", insn, opc);
 }
 
 int rv_execute(rv_ctx *ctx) {
@@ -41,5 +41,25 @@ int rv_execute(rv_ctx *ctx) {
     return 1;
   }
   rv_print_insn(ctx->last_insn);
+  uint8_t opc = ctx->last_insn & 0x7f;
+  uint32_t funct3 = (ctx->last_insn & 0x7000) >> 12;
+  switch (opc) {
+  case 0x13:
+    printf("OP-IMM");
+    switch (funct3) {
+    case 0x01:
+      printf(" SLLI (%" PRIx32 ")", funct3);
+      break;
+    default:
+      return 1;
+    }
+    printf("\n");
+    break;
+  case 0x73:
+    printf("BREAK\n");
+    break;
+  default:
+    return 1;
+  }
   return 0;
 }
