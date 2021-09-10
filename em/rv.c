@@ -67,9 +67,15 @@ int rv_execute(rv_ctx *ctx) {
   case RV_OP_IMM:
     printf("OP-IMM");
     switch (i.i.funct3) {
-    case 0x01:
-      printf(" SLLI rd=%s funct3=%" PRIx8 " rs1=%s", rv_rname(i.i.rd),
-             i.i.funct3, rv_rname(i.i.rs1));
+    case RV_SL_:
+      switch (i.sh.imm_11_5) {
+      case RV_S_L:
+        printf(" SLLI rd=%s funct3=%" PRIx8 " rs1=%s", rv_rname(i.sh.rd),
+               i.sh.funct3, rv_rname(i.sh.rs1));
+        break;
+      default:
+        return 1;
+      }
       break;
     default:
       return 1;
