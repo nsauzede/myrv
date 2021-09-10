@@ -69,12 +69,6 @@ int rv_execute(rv_ctx *ctx) {
     return 1;
   }
   //   rv_print_insn(ctx->last_insn);
-  uint8_t opc = ctx->last_insn & 0x7f;
-  uint8_t rd = (ctx->last_insn & 0xf80) >> 7;
-  uint8_t funct3 = (ctx->last_insn & 0x7000) >> 12;
-  uint8_t rs1 = (ctx->last_insn & 0xf8000) >> 15;
-  uint8_t rs2 = (ctx->last_insn & 0x1f00000) >> 20;
-  uint8_t funct7 = (ctx->last_insn & 0xfe000000) >> 25;
 
   rv_insn i;
   i.insn = ctx->last_insn;
@@ -87,7 +81,7 @@ int rv_execute(rv_ctx *ctx) {
   printf("opc=%" PRIx8 "\n", i.r.opc);
 
   switch (i.opc) {
-  case 0x13:
+  case RV_OP_IMM:
     printf("OP-IMM");
     switch (i.i.funct3) {
     case 0x01:
@@ -99,7 +93,7 @@ int rv_execute(rv_ctx *ctx) {
     }
     printf("\n");
     break;
-  case 0x33:
+  case RV_OP:
     printf("OP");
     switch (i.r.funct3) {
     case 0x00:

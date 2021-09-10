@@ -7,6 +7,20 @@
 // typedef  (*rv_cb_read)(uint32_t addr, );
 typedef uint32_t (*rv_read32_cb)(uint32_t addr);
 
+typedef enum {
+  RV_LUI = 0x37,
+  RV_AUIPC = 0x17,
+  RV_JAL = 0x6f,
+  RV_JALR = 0x67,
+  RV_BRANCH = 0x63,
+  RV_LOAD = 0x03,
+  RV_STORE = 0x23,
+  RV_OP_IMM = 0x13,
+  RV_OP = 0x33,
+  RV_MISC_MEM = 0x0f,
+  RV_SYSTEM = 0x73,
+} rv_opc;
+
 typedef struct rv_ctx {
   rv_read32_cb read32;
   uint32_t last_insn;
@@ -44,6 +58,10 @@ typedef union {
     uint32_t opc : 7, rd : 5, imm_19_12 : 8, imm11 : 1, imm_10_1 : 10,
         imm_20 : 1;
   } j;
+
+//   struct {
+//     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, rs2 : 5, funct7 : 7;
+//   }
 } rv_insn;
 
 int rv_init(rv_ctx *ctx);
