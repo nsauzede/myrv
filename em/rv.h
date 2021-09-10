@@ -11,9 +11,12 @@ typedef enum {
   // funct3
   RV_SL_ = 0x1,
   RV_SR_ = 0x5,
+  RV_ADD_SUB=0x0,
   // funct7
   RV_S_L = 0x00,
   RV_S_A = 0x20,
+  RV_ADD=0x00,
+  RV_SUB=0x20,
   // opcode
   RV_LUI = 0x37,
   RV_AUIPC = 0x17,

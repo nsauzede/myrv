@@ -85,9 +85,9 @@ int rv_execute(rv_ctx *ctx) {
   case RV_OP:
     printf("OP");
     switch (i.r.funct3) {
-    case 0x00:
+    case RV_ADD_SUB:
       switch (i.r.funct7) {
-      case 0x20:
+      case RV_SUB:
         printf(" SUB rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
         break;
@@ -104,10 +104,10 @@ int rv_execute(rv_ctx *ctx) {
     JAL:  imm_20 imm_10_1 imm_11 imm_19_12 rd opc
     JALR: imm_11_0 rs1 funct3 rd opc
     */
-  case 0x67:
+  case RV_JALR:
     printf("JALR rd=%s rs1=%s\n", rv_rname(i.i.rd), rv_rname(i.i.rs1));
     break;
-  case 0x73:
+  case RV_SYSTEM:
     printf("BREAK\n");
     break;
   default:
