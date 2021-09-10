@@ -51,12 +51,18 @@ fatal trap : terminates EE execution
 
 RV32I : 40 unique insn
 32 regs
-x0 => reads 0; write ignored
-x1 => link register by convention
-x2 => stack pointer by convention
-x5 => alternate link register by convention
+    // x[0] zero : hardwired zero, always == 0, writes ignored
+    // x[1] ra : link register (return address)
+    // x[2] sp : stack pointer
+
+    // x[5] t0 : alternate link register
+    // x[10-11] a0-1 : function arg / ret val
+    // x[12-17] a2-7 : function arg
+
 Four core insn formats :
 - R
 - I
 - S
 - U
+
+SLLI : 

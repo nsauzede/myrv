@@ -25,11 +25,6 @@ int rv_fetch(rv_ctx *ctx) {
   return 0;
 }
 
-int rv_print_insn(uint32_t insn) {
-  uint8_t opc = insn & 0x7f;
-  printf("INSN=0x%08" PRIx32 " OPC=0x%02" PRIx8 "\n", insn, opc);
-}
-
 char *rv_rname(uint8_t reg) {
   char *regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0",
                   "s1",   "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
@@ -51,11 +46,10 @@ int rv_execute(rv_ctx *ctx) {
   if (rv_fetch(ctx)) {
     return 1;
   }
-  //   rv_print_insn(ctx->last_insn);
 
   rv_insn i;
   i.insn = ctx->last_insn;
-  printf("%" PRIx32 " ", i.insn);
+  printf("0x%08" PRIx32 " ", i.insn);
   printf("func7=%" PRIx8 " ", i.r.funct7);
   printf("rs2=%" PRIx32 " ", i.r.rs2);
   printf("rs1=%" PRIx32 " ", i.r.rs1);
@@ -70,8 +64,10 @@ int rv_execute(rv_ctx *ctx) {
     case RV_SL_:
       switch (i.sh.imm_11_5) {
       case RV_S_L:
-        printf(" SLLI rd=%s funct3=%" PRIx8 " rs1=%s", rv_rname(i.sh.rd),
-               i.sh.funct3, rv_rname(i.sh.rs1));
+        printf(" SLLI rd=%s funct3=%" PRIx8 " rs1=%s imm4_0=%" PRIx32 " ",
+               rv_rname(i.sh.rd), i.sh.funct3, rv_rname(i.sh.rs1),
+               i.sh.imm_4_0);
+        ctx->x[i.sh.rd] = ctx->x[i.sh.rs1] << i.sh.imm_4_0;
         break;
       default:
         return 1;

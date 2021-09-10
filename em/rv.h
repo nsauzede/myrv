@@ -4,19 +4,18 @@
 
 #define RV_REGS 32
 
-// typedef  (*rv_cb_read)(uint32_t addr, );
 typedef uint32_t (*rv_read32_cb)(uint32_t addr);
 
 typedef enum {
   // funct3
   RV_SL_ = 0x1,
   RV_SR_ = 0x5,
-  RV_ADD_SUB=0x0,
+  RV_ADD_SUB = 0x0,
   // funct7
   RV_S_L = 0x00,
   RV_S_A = 0x20,
-  RV_ADD=0x00,
-  RV_SUB=0x20,
+  RV_ADD = 0x00,
+  RV_SUB = 0x20,
   // opcode
   RV_LUI = 0x37,
   RV_AUIPC = 0x17,
@@ -34,14 +33,13 @@ typedef enum {
 typedef struct rv_ctx {
   rv_read32_cb read32;
   uint32_t last_insn;
-  uint32_t x[RV_REGS];
-  // x[0] zero : hardwired zero, always == 0, writes ignored
-  // x[1] ra : link register (return address)
-  // x[2] sp : stack pointer
-
-  // x[5] t0 : alternate link register
-  // x[10-11] a0-1 : function arg / ret val
-  // x[12-17] a2-7 : function arg
+  union {
+    uint32_t x[RV_REGS];
+    struct {
+      uint32_t zero, ra, sp, gp, tp, t0, t1, t2, s0, s1, a0, a1, a2, a3, a4, a5,
+          a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6;
+    };
+  };
   uint32_t pc;
 } rv_ctx;
 

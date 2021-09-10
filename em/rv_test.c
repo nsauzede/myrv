@@ -4,7 +4,6 @@
 #include "rv.h"
 
 uint32_t rv_read32(uint32_t addr) {
-  //   printf("blah\n");
   switch (addr) {
   case 0:
     return 0x00351793; // slli a5,a0,0x3
@@ -25,10 +24,16 @@ int rv_test() {
   rv_ctx ctx;
   assert(0 == rv_init(&ctx));
   assert(0 == ctx.pc); // test initial PC
+  assert(0 == ctx.a0); // test initial a0
+  assert(0 == ctx.a5); // test initial a5
+  ctx.a0 = 1;
+  assert(1 == ctx.a0); // test input a0
+  assert(1 == ctx.x[10]); // test input a0
   ctx.read32 = rv_read32;
   assert(0 == rv_execute(&ctx));
   assert(0x00351793 == ctx.last_insn);
   assert(4 == ctx.pc); // test incremented PC
+  assert(8 == ctx.a5); // test shift+move
   assert(0 == rv_execute(&ctx));
   assert(0x40a78533 == ctx.last_insn);
   assert(0 == rv_execute(&ctx));
