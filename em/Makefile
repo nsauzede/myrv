@@ -1,4 +1,5 @@
-TARGET:=esw.bin em
+TARGET:=em
+#TARGET+=esw.bin
 
 all: $(TARGET)
 
