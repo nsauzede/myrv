@@ -31,30 +31,13 @@ int rv_print_insn(uint32_t insn) {
 }
 
 char *rv_rname(uint8_t reg) {
-  switch (reg) {
-  case 0:
-    return "zero";
-  case 1:
-    return "ra";
-  case 10:
-    return "a0";
-  case 11:
-    return "a1";
-  case 12:
-    return "a2";
-  case 13:
-    return "a3";
-  case 14:
-    return "a4";
-  case 15:
-    return "a5";
-  case 16:
-    return "a6";
-  case 17:
-    return "a7";
-  default:
-    return "??";
-  }
+  char *regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0",
+                  "s1",   "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
+                  "s2",   "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10",
+                  "s11",  "t3", "t4", "t5", "t6", "??"};
+  if (reg > sizeof(regs) / sizeof(regs[0]))
+    reg = sizeof(regs) / sizeof(regs[0]);
+  return regs[reg];
 }
 
 int rv_execute(rv_ctx *ctx) {
@@ -111,10 +94,10 @@ int rv_execute(rv_ctx *ctx) {
     }
     printf("\n");
     break;
-/*
-JAL:  imm_20 imm_10_1 imm_11 imm_19_12 rd opc
-JALR: imm_11_0 rs1 funct3 rd opc
-*/
+    /*
+    JAL:  imm_20 imm_10_1 imm_11 imm_19_12 rd opc
+    JALR: imm_11_0 rs1 funct3 rd opc
+    */
   case 0x67:
     printf("JALR rd=%s rs1=%s\n", rv_rname(i.i.rd), rv_rname(i.i.rs1));
     break;
