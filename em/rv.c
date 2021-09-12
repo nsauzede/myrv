@@ -96,7 +96,11 @@ int rv_execute(rv_ctx *ctx) {
   case RV_OP:
     printf("OP ");
     switch (i.r.funct3) {
+#ifdef RV32M
+    case RV_ADD_SUB_MUL:
+#else
     case RV_ADD_SUB:
+#endif
       switch (i.r.funct7) {
       case RV_SUB:
         printf("SUB rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
@@ -108,6 +112,31 @@ int rv_execute(rv_ctx *ctx) {
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
         ctx->x[i.r.rd] = ctx->x[i.r.rs1] + ctx->x[i.r.rs2];
         break;
+#ifdef RV32M
+      case RV_MUL:
+        printf("MUL rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
+               i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
+        ctx->x[i.r.rd] = ctx->x[i.r.rs1] * ctx->x[i.r.rs2];
+        break;
+#endif
+      default:
+        die();
+        return 1;
+      }
+      break;
+#ifdef RV32M
+    case RV_XOR_DIV:
+#else
+    case RV_XOR:
+#endif
+      switch (i.r.funct7) {
+#ifdef RV32M
+      case RV_DIV:
+        printf("DIV rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
+               i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
+        ctx->x[i.r.rd] = ctx->x[i.r.rs1] / ctx->x[i.r.rs2];
+        break;
+#endif
       default:
         die();
         return 1;

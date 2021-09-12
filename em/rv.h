@@ -4,11 +4,18 @@
 
 #define RV_REGS 32
 
+#define RV32M
+
 typedef enum {
   // funct3
   RV_SLLI = 0x1,
   RV_SR_I = 0x5,
   RV_ADD_SUB = 0x0,
+  RV_XOR = 0x4,
+  #ifdef RV32M
+  RV_ADD_SUB_MUL = 0x0,
+  RV_XOR_DIV = 0x4,
+  #endif
   RV_ADDI = 0x0,
   RV_LW = 0x2,
   RV_SW = 0x2,
@@ -17,6 +24,10 @@ typedef enum {
   RV_S_AI = 0x20,
   RV_ADD = 0x00,
   RV_SUB = 0x20,
+  #ifdef RV32M
+  RV_MUL = 0x01,
+  RV_DIV = 0x01,
+  #endif
   // opcode
   RV_LUI = 0x37,
   RV_AUIPC = 0x17,
