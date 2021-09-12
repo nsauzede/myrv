@@ -12,7 +12,7 @@ uint32_t rv_read32(uint32_t addr) {
   case 8:
     return 0x00008067; // jalr ?? (ret)
   default:
-    return 0x00000073; // break
+    return 0x00100073; // break
   }
 }
 
@@ -27,7 +27,7 @@ int rv_test() {
   assert(0 == ctx.a0); // test initial a0
   assert(0 == ctx.a5); // test initial a5
   ctx.a0 = 1;
-  assert(1 == ctx.a0); // test input a0
+  assert(1 == ctx.a0);    // test input a0
   assert(1 == ctx.x[10]); // test input a0
   ctx.read32 = rv_read32;
   assert(0 == rv_execute(&ctx));
@@ -36,10 +36,12 @@ int rv_test() {
   assert(8 == ctx.a5); // test shift+move
   assert(0 == rv_execute(&ctx));
   assert(0x40a78533 == ctx.last_insn);
+  assert(8 == ctx.pc); // test incremented PC
+  assert(7 == ctx.a0); // test sub+move
   assert(0 == rv_execute(&ctx));
   assert(0x00008067 == ctx.last_insn);
   assert(0 == rv_execute(&ctx));
-  assert(0x00000073 == ctx.last_insn);
+  assert(0x00100073 == ctx.last_insn);
 
   printf("RV Test OK\n");
   return 0;
