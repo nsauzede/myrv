@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "rv.h"
@@ -8,11 +9,11 @@
 #define die()                                                                  \
   do {                                                                         \
     printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
+    exit(1);                                                                   \
   } while (0)
 
 int rv_init(rv_ctx *ctx) {
   if (!ctx) {
-    die();
     return 1;
   }
   memset(ctx, 0, sizeof(*ctx));
@@ -45,7 +46,6 @@ char *rv_rname(uint8_t reg) {
 
 int rv_execute(rv_ctx *ctx) {
   if (!ctx) {
-    die();
     return 1;
   }
   if (ctx->pc % 4) {
@@ -69,12 +69,12 @@ int rv_execute(rv_ctx *ctx) {
 
   switch (i.opc) {
   case RV_OP_IMM:
-    printf("OP-IMM");
+    printf("OP-IMM ");
     switch (i.i.funct3) {
-    case RV_SL_:
+    case RV_SLLI:
       switch (i.sh.imm_11_5) {
-      case RV_S_L:
-        printf(" SLLI rd=%s funct3=%" PRIx8 " rs1=%s imm4_0=%" PRIx32 " ",
+      case RV_S_LI:
+        printf("SLLI rd=%s funct3=%" PRIx8 " rs1=%s imm4_0=%" PRIx32,
                rv_rname(i.sh.rd), i.sh.funct3, rv_rname(i.sh.rs1),
                i.sh.imm_4_0);
         ctx->x[i.sh.rd] = ctx->x[i.sh.rs1] << i.sh.imm_4_0;
@@ -84,6 +84,11 @@ int rv_execute(rv_ctx *ctx) {
         return 1;
       }
       break;
+    case RV_ADDI:
+      printf("ADDI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
+             rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
+      ctx->x[i.i.rd] = ctx->x[i.i.rs1] + i.i.imm_11_0;
+      break;
     default:
       die();
       return 1;
@@ -91,17 +96,17 @@ int rv_execute(rv_ctx *ctx) {
     printf("\n");
     break;
   case RV_OP:
-    printf("OP");
+    printf("OP ");
     switch (i.r.funct3) {
     case RV_ADD_SUB:
       switch (i.r.funct7) {
       case RV_SUB:
-        printf(" SUB rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
+        printf("SUB rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
         ctx->x[i.r.rd] = ctx->x[i.r.rs1] - ctx->x[i.r.rs2];
         break;
       case RV_ADD:
-        printf(" ADD rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
+        printf("ADD rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
         ctx->x[i.r.rd] = ctx->x[i.r.rs1] + ctx->x[i.r.rs2];
         break;
@@ -115,6 +120,11 @@ int rv_execute(rv_ctx *ctx) {
       return 1;
     }
     printf("\n");
+    break;
+  case RV_LUI:
+    printf("LUI rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.laui.rd),
+           i.laui.imm_31_12);
+    ctx->x[i.laui.rd] = i.laui.imm_31_12 << 12;
     break;
     /*
     JAL:  imm_20 imm_10_1 imm_11 imm_19_12 rd opc

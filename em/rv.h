@@ -8,12 +8,13 @@ typedef uint32_t (*rv_read32_cb)(uint32_t addr);
 
 typedef enum {
   // funct3
-  RV_SL_ = 0x1,
-  RV_SR_ = 0x5,
+  RV_SLLI = 0x1,
+  RV_SR_I = 0x5,
   RV_ADD_SUB = 0x0,
+  RV_ADDI = 0x0,
   // funct7
-  RV_S_L = 0x00,
-  RV_S_A = 0x20,
+  RV_S_LI = 0x00,
+  RV_S_AI = 0x20,
   RV_ADD = 0x00,
   RV_SUB = 0x20,
   // opcode
@@ -69,6 +70,9 @@ typedef union {
   struct {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, imm_4_0 : 5, imm_11_5 : 7;
   } sh;
+  struct {
+    uint32_t opc : 7, rd : 5, imm_31_12 : 20;
+  } laui;
 } rv_insn;
 
 int rv_init(rv_ctx *ctx);
