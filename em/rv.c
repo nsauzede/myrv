@@ -162,7 +162,7 @@ int rv_execute(rv_ctx *ctx) {
     break;
   case RV_SYSTEM:
     printf("BREAK\n");
-    break;
+    return 1;
   default:
     die();
     return 1;

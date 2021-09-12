@@ -113,7 +113,7 @@ int rv_test() {
   assert(0x00752423 == ctx.last_insn);
   assert(-5 == rv_read32(0x2008)); // test sw
 
-  assert(0 == rv_execute(&ctx));
+  assert(1 == rv_execute(&ctx));
   assert(0x00100073 == ctx.last_insn);
 
   printf("RV Test OK\n");

@@ -3,8 +3,9 @@
 
 #include "rv.h"
 
+
 uint32_t rv_read32(uint32_t addr) {
-	return 0;
+	return 0x00100073;
 }
 
 int rv_write32(uint32_t addr, uint32_t val) {
