@@ -142,6 +142,24 @@ int rv_execute(rv_ctx *ctx) {
         return 1;
       }
       break;
+#ifdef RV32M
+    case RV_OR_REM:
+#else
+    case RV_OR:
+#endif
+      switch (i.r.funct7) {
+#ifdef RV32M
+      case RV_REM:
+        printf("DIV rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
+               i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
+        ctx->x[i.r.rd] = ctx->x[i.r.rs1] % ctx->x[i.r.rs2];
+        break;
+#endif
+      default:
+        die();
+        return 1;
+      }
+      break;
     default:
       die();
       return 1;

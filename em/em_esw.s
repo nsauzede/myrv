@@ -15,6 +15,7 @@ _start:
         sub t3, t0, t1
         mul t4, t0, t1
         div t5, t0, t1
+        rem t6, t0, t1
         sw t2, 8(a0)
         sw t3, 12(a0)
         sw t4, 16(a0)

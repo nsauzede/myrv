@@ -12,9 +12,11 @@ typedef enum {
   RV_SR_I = 0x5,
   RV_ADD_SUB = 0x0,
   RV_XOR = 0x4,
+  RV_OR = 0x6,
   #ifdef RV32M
   RV_ADD_SUB_MUL = 0x0,
   RV_XOR_DIV = 0x4,
+  RV_OR_REM = 0x6,
   #endif
   RV_ADDI = 0x0,
   RV_LW = 0x2,
@@ -27,6 +29,7 @@ typedef enum {
   #ifdef RV32M
   RV_MUL = 0x01,
   RV_DIV = 0x01,
+  RV_REM = 0x01,
   #endif
   // opcode
   RV_LUI = 0x37,
