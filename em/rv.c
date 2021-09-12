@@ -5,8 +5,14 @@
 
 #include "rv.h"
 
+#define die()                                                                  \
+  do {                                                                         \
+    printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
+  } while (0)
+
 int rv_init(rv_ctx *ctx) {
   if (!ctx) {
+    die();
     return 1;
   }
   memset(ctx, 0, sizeof(*ctx));
@@ -15,9 +21,11 @@ int rv_init(rv_ctx *ctx) {
 
 int rv_fetch(rv_ctx *ctx) {
   if (!ctx) {
+    die();
     return 1;
   }
   if (!ctx->read32) {
+    die();
     return 1;
   }
   ctx->last_insn = ctx->read32(ctx->pc);
@@ -37,6 +45,7 @@ char *rv_rname(uint8_t reg) {
 
 int rv_execute(rv_ctx *ctx) {
   if (!ctx) {
+    die();
     return 1;
   }
   if (ctx->pc % 4) {
@@ -44,6 +53,7 @@ int rv_execute(rv_ctx *ctx) {
   }
   printf("%08" PRIx32 ": ", ctx->pc);
   if (rv_fetch(ctx)) {
+    die();
     return 1;
   }
 
@@ -70,10 +80,12 @@ int rv_execute(rv_ctx *ctx) {
         ctx->x[i.sh.rd] = ctx->x[i.sh.rs1] << i.sh.imm_4_0;
         break;
       default:
+        die();
         return 1;
       }
       break;
     default:
+      die();
       return 1;
     }
     printf("\n");
@@ -94,10 +106,12 @@ int rv_execute(rv_ctx *ctx) {
         ctx->x[i.r.rd] = ctx->x[i.r.rs1] + ctx->x[i.r.rs2];
         break;
       default:
+        die();
         return 1;
       }
       break;
     default:
+      die();
       return 1;
     }
     printf("\n");
@@ -113,6 +127,7 @@ int rv_execute(rv_ctx *ctx) {
     printf("BREAK\n");
     break;
   default:
+    die();
     return 1;
   }
   return 0;
