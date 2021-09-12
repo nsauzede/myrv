@@ -5,16 +5,26 @@
 #include "rv.h"
 
 static uint32_t mem2000 = 0;
+static uint32_t mem2004 = 0;
+static uint32_t mem2008 = 0;
 int rv_write32(uint32_t addr, uint32_t val) {
+  printf(" WRITE(%" PRIx32 ",%" PRIx32 ") ", addr, val);
   switch (addr) {
   case 0x2000:
     mem2000 = val;
+    break;
+  case 0x2004:
+    mem2004 = val;
+    break;
+  case 0x2008:
+    mem2008 = val;
     break;
   default:
     return 1;
   }
 }
 uint32_t rv_read32(uint32_t addr) {
+  printf(" READ(%" PRIx32 ") ", addr);
   switch (addr) {
   case 0 * 4:
     return 0x00351793; // slli a5,a0,0x3
@@ -28,15 +38,21 @@ uint32_t rv_read32(uint32_t addr) {
     return 0x00050513; // mv	a0,a0
   case 5 * 4:
     return 0x00052283; // lw	t0,0(a0) # 2000 <DATA_BASE>
-    //   case 6 * 4:
-    //     return 0x00452303; // lw	t1,4(a0)
-    //   case 7 * 4:
-    //     return 0x006283b3; // add t2,t0,t1
-    //   case 8 * 4:
-    //     return 0x00752423; // sw	t2,8(a0)
+  case 6 * 4:
+    return 0x00452303; // lw	t1,4(a0)
+  case 7 * 4:
+    return 0x006283b3; // add t2,t0,t1
+  case 8 * 4:
+    return 0x00752423; // sw	t2,8(a0)
 
   case 0x2000: {
     return mem2000;
+  }
+  case 0x2004: {
+    return mem2004;
+  }
+  case 0x2008: {
+    return mem2008;
   }
   default:
     return 0x00100073; // break
@@ -82,18 +98,20 @@ int rv_test() {
 
   assert(0 == rv_execute(&ctx));
   assert(0x00052283 == ctx.last_insn);
-//   printf("t0=%x\n", ctx.t0);
+  //   printf("t0=%x\n", ctx.t0);
   assert(-2 == ctx.t0); // test lw
 
-  //   assert(0 == rv_execute(&ctx));
-  //   assert(0x00452303 == ctx.last_insn);
+  assert(0 == rv_execute(&ctx));
+  assert(0x00452303 == ctx.last_insn);
+  assert(-3 == ctx.t1); // test lw
 
-  //   assert(0 == rv_execute(&ctx));
-  //   assert(0x006283b3 == ctx.last_insn);
-  //   assert(-5 == ctx.t2); // test add+move
+  assert(0 == rv_execute(&ctx));
+  assert(0x006283b3 == ctx.last_insn);
+  assert(-5 == ctx.t2); // test add+move
 
-  //   assert(0 == rv_execute(&ctx));
-  //   assert(0x00752423 == ctx.last_insn);
+  assert(0 == rv_execute(&ctx));
+  assert(0x00752423 == ctx.last_insn);
+  assert(-5 == rv_read32(0x2008)); // test sw
 
   assert(0 == rv_execute(&ctx));
   assert(0x00100073 == ctx.last_insn);

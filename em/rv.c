@@ -18,6 +18,7 @@ int rv_init(rv_ctx *ctx, rv_read32_cb rv_read32, rv_write32_cb rv_write32) {
   }
   memset(ctx, 0, sizeof(*ctx));
   ctx->read32 = rv_read32;
+  ctx->write32 = rv_write32;
   return 0;
 }
 
@@ -126,11 +127,30 @@ int rv_execute(rv_ctx *ctx) {
   case RV_LOAD:
     printf("LOAD ");
     switch (i.r.funct3) {
-    case RV_LW:
-      printf("LW rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
-             rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
-      ctx->x[i.i.rd] = ctx->read32(ctx->x[i.r.rs1] + i.i.imm_11_0);
+    case RV_LW: {
+      uint32_t imm = i.i.imm_11_0;
+      printf("LW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32, rv_rname(i.i.rd),
+             i.i.funct3, rv_rname(i.i.rs1), imm);
+      ctx->x[i.i.rd] = ctx->read32(ctx->x[i.r.rs1] + imm);
       break;
+    }
+    default:
+      die();
+      return 1;
+    }
+    printf("\n");
+    break;
+  case RV_STORE:
+    printf("STORE ");
+    switch (i.r.funct3) {
+    case RV_SW: {
+      uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
+      printf("SW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
+             rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
+      // uint32_t addr=ctx->read32(ctx->x[i.r.rs1] + imm);
+      ctx->write32(ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
+      break;
+    }
     default:
       die();
       return 1;

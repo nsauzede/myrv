@@ -11,6 +11,7 @@ typedef enum {
   RV_ADD_SUB = 0x0,
   RV_ADDI = 0x0,
   RV_LW = 0x2,
+  RV_SW = 0x2,
   // funct7
   RV_S_LI = 0x00,
   RV_S_AI = 0x20,
@@ -66,6 +67,7 @@ typedef int (*rv_write32_cb)(uint32_t addr, uint32_t val);
 
 typedef struct rv_ctx {
   rv_read32_cb read32;
+  rv_write32_cb write32;
   uint32_t last_insn;
   union {
     uint32_t x[RV_REGS];
