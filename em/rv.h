@@ -4,14 +4,13 @@
 
 #define RV_REGS 32
 
-typedef uint32_t (*rv_read32_cb)(uint32_t addr);
-
 typedef enum {
   // funct3
   RV_SLLI = 0x1,
   RV_SR_I = 0x5,
   RV_ADD_SUB = 0x0,
   RV_ADDI = 0x0,
+  RV_LW = 0x2,
   // funct7
   RV_S_LI = 0x00,
   RV_S_AI = 0x20,
@@ -30,19 +29,6 @@ typedef enum {
   RV_MISC_MEM = 0x0f,
   RV_SYSTEM = 0x73,
 } rv_opc;
-
-typedef struct rv_ctx {
-  rv_read32_cb read32;
-  uint32_t last_insn;
-  union {
-    uint32_t x[RV_REGS];
-    struct {
-      uint32_t zero, ra, sp, gp, tp, t0, t1, t2, s0, s1, a0, a1, a2, a3, a4, a5,
-          a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6;
-    };
-  };
-  uint32_t pc;
-} rv_ctx;
 
 typedef union {
   uint32_t insn;
@@ -75,5 +61,21 @@ typedef union {
   } laui;
 } rv_insn;
 
-int rv_init(rv_ctx *ctx);
+typedef uint32_t (*rv_read32_cb)(uint32_t addr);
+typedef int (*rv_write32_cb)(uint32_t addr, uint32_t val);
+
+typedef struct rv_ctx {
+  rv_read32_cb read32;
+  uint32_t last_insn;
+  union {
+    uint32_t x[RV_REGS];
+    struct {
+      uint32_t zero, ra, sp, gp, tp, t0, t1, t2, s0, s1, a0, a1, a2, a3, a4, a5,
+          a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6;
+    };
+  };
+  uint32_t pc;
+} rv_ctx;
+
+int rv_init(rv_ctx *ctx, rv_read32_cb rv_read32, rv_write32_cb rv_write32);
 int rv_execute(rv_ctx *ctx);

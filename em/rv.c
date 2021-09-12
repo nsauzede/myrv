@@ -12,20 +12,17 @@
     exit(1);                                                                   \
   } while (0)
 
-int rv_init(rv_ctx *ctx) {
-  if (!ctx) {
+int rv_init(rv_ctx *ctx, rv_read32_cb rv_read32, rv_write32_cb rv_write32) {
+  if (!ctx || !rv_read32 || !rv_write32) {
     return 1;
   }
   memset(ctx, 0, sizeof(*ctx));
+  ctx->read32 = rv_read32;
   return 0;
 }
 
 int rv_fetch(rv_ctx *ctx) {
   if (!ctx) {
-    die();
-    return 1;
-  }
-  if (!ctx->read32) {
     die();
     return 1;
   }
@@ -126,10 +123,20 @@ int rv_execute(rv_ctx *ctx) {
            i.laui.imm_31_12);
     ctx->x[i.laui.rd] = i.laui.imm_31_12 << 12;
     break;
-    /*
-    JAL:  imm_20 imm_10_1 imm_11 imm_19_12 rd opc
-    JALR: imm_11_0 rs1 funct3 rd opc
-    */
+  case RV_LOAD:
+    printf("LOAD ");
+    switch (i.r.funct3) {
+    case RV_LW:
+      printf("LW rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
+             rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
+      ctx->x[i.i.rd] = ctx->read32(ctx->x[i.r.rs1] + i.i.imm_11_0);
+      break;
+    default:
+      die();
+      return 1;
+    }
+    printf("\n");
+    break;
   case RV_JALR:
     printf("JALR rd=%s rs1=%s\n", rv_rname(i.i.rd), rv_rname(i.i.rs1));
     break;
