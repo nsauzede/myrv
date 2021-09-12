@@ -1,5 +1,5 @@
 TARGET:=em
-#TARGET+=esw.bin
+TARGET+=em_esw.bin
 
 all: $(TARGET)
 
@@ -16,7 +16,11 @@ esw.o: esw.c
 	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc -c $< -g -O2 -fsigned-char
 	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objdump -d -S $@
 
-esw.bin: esw.o
+%.o: %.s
+	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-as -o $@ $<
+	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objdump -d -S $@
+
+%.bin: %.o
 	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objcopy -Obinary $< $@
 	od -tx1 $@
 
