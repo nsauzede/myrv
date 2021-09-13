@@ -1,5 +1,6 @@
-TARGET:=em
-TARGET+=em_esw.bin
+TARGET:=rv_test
+#TARGET+=em
+#TARGET+=em_esw.bin
 
 all: $(TARGET)
 
@@ -9,7 +10,7 @@ test: rv_test
 rv_test: rv_test.c rv.c
 	$(CC) -o $@ $^
 
-em: em.c rv.c
+em: em.c rv.c | em_esw.bin
 	$(CC) -o $@ $^
 
 esw.o: esw.c
