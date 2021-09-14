@@ -24,9 +24,14 @@ int rv_write32(uint32_t addr, uint32_t val) {
   return 1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  char *fin = "em_esw.bin";
+  int arg = 1;
+  if (arg < argc) {
+    fin = argv[arg++];
+  }
   mem = calloc(mem_len, 1);
-  FILE *in = fopen("em_esw.bin", "rb");
+  FILE *in = fopen(fin, "rb");
   fread(mem, mem_len, 1, in);
   fclose(in);
 

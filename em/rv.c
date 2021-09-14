@@ -9,8 +9,21 @@
 #define die()                                                                  \
   do {                                                                         \
     printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
+  if (ctx){rv_print_insn(ctx->last_insn); } \
     exit(1);                                                                   \
   } while (0)
+
+void rv_print_insn(uint32_t insn) {
+  rv_insn i;
+  i.insn = insn;
+  printf("0x%08" PRIx32 " ", i.insn);
+  printf("func7=%" PRIx8 " ", i.r.funct7);
+  printf("rs2=%" PRIx32 " ", i.r.rs2);
+  printf("rs1=%" PRIx32 " ", i.r.rs1);
+  printf("funct3=%" PRIx8 " ", i.r.funct3);
+  printf("rd=%" PRIx32 " ", i.r.rd);
+  printf("opc=%" PRIx8 "\n", i.r.opc);
+}
 
 int rv_init(rv_ctx *ctx, rv_read32_cb rv_read32, rv_write32_cb rv_write32) {
   if (!ctx || !rv_read32 || !rv_write32) {
@@ -57,13 +70,7 @@ int rv_execute(rv_ctx *ctx) {
 
   rv_insn i;
   i.insn = ctx->last_insn;
-  printf("0x%08" PRIx32 " ", i.insn);
-  printf("func7=%" PRIx8 " ", i.r.funct7);
-  printf("rs2=%" PRIx32 " ", i.r.rs2);
-  printf("rs1=%" PRIx32 " ", i.r.rs1);
-  printf("funct3=%" PRIx8 " ", i.r.funct3);
-  printf("rd=%" PRIx32 " ", i.r.rd);
-  printf("opc=%" PRIx8 "\n", i.r.opc);
+//  rv_print_insn(i);
 
   switch (i.opc) {
   case RV_OP_IMM:
