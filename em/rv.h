@@ -71,9 +71,6 @@ typedef union {
   struct {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, imm_4_0 : 5, imm_11_5 : 7;
   } sh;
-  struct {
-    uint32_t opc : 7, rd : 5, imm_31_12 : 20;
-  } laui;
 } rv_insn;
 
 typedef uint32_t (*rv_read32_cb)(uint32_t addr);

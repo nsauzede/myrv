@@ -22,6 +22,7 @@ int rv_write32(uint32_t addr, uint32_t val) {
   default:
     return 1;
   }
+  return 0;
 }
 uint32_t rv_read32(uint32_t addr) {
   printf(" READ(%" PRIx32 ") ", addr);
@@ -31,7 +32,8 @@ uint32_t rv_read32(uint32_t addr) {
   case 1 * 4:
     return 0x40a78533; // sub a0,a5,a0
   case 2 * 4:
-    return 0x00008067; // jalr ?? (ret)
+    // return 0x00008067; // jalr ?? (ret)
+    return 0x00000013; // nop (addi x0,x0,0)
   case 3 * 4:
     return 0x00002537; // lui	a0,0x2
   case 4 * 4:
@@ -88,7 +90,8 @@ int rv_test() {
   assert(8 == ctx.pc); // test incremented PC
   assert(7 == ctx.a0); // test sub+move
   assert(0 == rv_execute(&ctx));
-  assert(0x00008067 == ctx.last_insn);
+//   assert(0x00008067 == ctx.last_insn);
+  assert(0x00000013 == ctx.last_insn);
 
   assert(0 == rv_execute(&ctx));
   assert(0x00002537 == ctx.last_insn);

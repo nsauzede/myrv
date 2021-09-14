@@ -2,20 +2,25 @@ TARGET:=rv_test
 #TARGET+=em
 #TARGET+=em_esw.bin
 
+CFLAGS:=-Wall -Werror
+CFLAGS+=-g -O0
+
 all: $(TARGET)
 
 test: rv_test
 	./rv_test
 
 rv_test: rv_test.c rv.c
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 em: em.c rv.c | em_esw.bin
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
-esw.o: esw.c
-	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc -c $< -g -O2 -fsigned-char
-	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objdump -d -S $@
+esw.bin: esw.c
+	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -nostdlib -Ttext=0 -o esw
+	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objdump -d -S esw
+	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objcopy -Obinary esw $@
+	od -tx1 $@
 
 %.o: %.s
 	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-as -o $@ $<
@@ -26,4 +31,4 @@ esw.o: esw.c
 	od -tx1 $@
 
 clean:
-	$(RM) *.o *.bin rv_test em
+	$(RM) *.o *.bin rv_test em esw

@@ -9,7 +9,10 @@
 #define die()                                                                  \
   do {                                                                         \
     printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
-  if (ctx){rv_print_insn(ctx->last_insn); } \
+    if (ctx) {                                                                 \
+      printf("PC=%08" PRIx32 " ", ctx->pc);                                    \
+      rv_print_insn(ctx->last_insn);                                           \
+    }                                                                          \
     exit(1);                                                                   \
   } while (0)
 
@@ -55,6 +58,15 @@ char *rv_rname(uint8_t reg) {
   return regs[reg];
 }
 
+int32_t rv_signext(int32_t val, int sbit) {
+  int32_t sign = 0;
+  int32_t mask = 1 << sbit;
+  if (val & mask) {
+    sign = -1 & ~(mask - 1);
+  }
+  return val | sign;
+}
+
 int rv_execute(rv_ctx *ctx) {
   if (!ctx) {
     return 1;
@@ -62,7 +74,7 @@ int rv_execute(rv_ctx *ctx) {
   if (ctx->pc % 4) {
     return 2;
   }
-  printf("%08" PRIx32 ": ", ctx->pc);
+  //   printf("%08" PRIx32 ": ", ctx->pc);
   if (rv_fetch(ctx)) {
     die();
     return 1;
@@ -70,7 +82,7 @@ int rv_execute(rv_ctx *ctx) {
 
   rv_insn i;
   i.insn = ctx->last_insn;
-//  rv_print_insn(i);
+  //   rv_print_insn(ctx->last_insn);
 
   switch (i.opc) {
   case RV_OP_IMM:
@@ -92,7 +104,7 @@ int rv_execute(rv_ctx *ctx) {
     case RV_ADDI:
       printf("ADDI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
              rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
-      ctx->x[i.i.rd] = ctx->x[i.i.rs1] + i.i.imm_11_0;
+      ctx->x[i.i.rd] = ctx->x[i.i.rs1] + rv_signext(i.i.imm_11_0, 11);
       break;
     default:
       die();
@@ -174,9 +186,8 @@ int rv_execute(rv_ctx *ctx) {
     printf("\n");
     break;
   case RV_LUI:
-    printf("LUI rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.laui.rd),
-           i.laui.imm_31_12);
-    ctx->x[i.laui.rd] = i.laui.imm_31_12 << 12;
+    printf("LUI rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.u.rd), i.u.imm_31_12);
+    ctx->x[i.u.rd] = i.u.imm_31_12 << 12;
     break;
   case RV_LOAD:
     printf("LOAD ");
@@ -199,7 +210,7 @@ int rv_execute(rv_ctx *ctx) {
     switch (i.r.funct3) {
     case RV_SW: {
       uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
-      printf("SW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
+      printf("SW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
              rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
       // uint32_t addr=ctx->read32(ctx->x[i.r.rs1] + imm);
       ctx->write32(ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
@@ -209,11 +220,29 @@ int rv_execute(rv_ctx *ctx) {
       die();
       return 1;
     }
-    printf("\n");
     break;
+  case RV_AUIPC:
+    printf("AUIPC rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.u.rd),
+           i.u.imm_31_12);
+    ctx->x[i.u.rd] = (i.u.imm_31_12 << 12) + ctx->pc - 4;
+    break;
+
+  case RV_JAL: {
+    uint32_t imm = (i.j.imm_20 << 20) + (i.j.imm_19_12 << 12) +
+                   (i.j.imm11 << 11) + (i.j.imm_10_1 << 1);
+    printf("JAL rd=%s imm=%" PRIx32 "\n", rv_rname(i.j.rd), imm);
+    ctx->x[i.j.rd] = ctx->pc;
+    ctx->pc = imm + ctx->pc - 4;
+    break;
+  }
+
   case RV_JALR:
-    printf("JALR rd=%s rs1=%s\n", rv_rname(i.i.rd), rv_rname(i.i.rs1));
+    printf("JALR rd=%s rs1=%s imm11_0=%" PRIx32 "\n", rv_rname(i.i.rd),
+           rv_rname(i.i.rs1), i.i.imm_11_0);
+    ctx->x[i.i.rd] = ctx->pc;
+    ctx->pc = (i.i.imm_11_0 + ctx->x[i.i.rs1]) & ~1;
     break;
+
   case RV_SYSTEM:
     printf("BREAK\n");
     return 1;
@@ -221,5 +250,7 @@ int rv_execute(rv_ctx *ctx) {
     die();
     return 1;
   }
+  //   printf("ra=%08" PRIx32 "\n", ctx->ra);
+
   return 0;
 }

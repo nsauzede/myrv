@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
 
   rv_ctx ctx;
   rv_init(&ctx, rv_read32, rv_write32);
+  ctx.sp = 0x2000;
 
   rv_write32(0x2000, -2);
   rv_write32(0x2004, -3);
