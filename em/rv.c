@@ -244,8 +244,23 @@ int rv_execute(rv_ctx *ctx) {
     break;
 
   case RV_SYSTEM:
-    printf("BREAK\n");
-    return 1;
+    switch (i.sy.funct3) {
+    case RV_PRIV:
+      switch (i.sy.funct12) {
+      case RV_EBREAK:
+        printf("BREAK\n");
+        return 1;
+        break;
+      default:
+        die();
+        return 1;
+      }
+      break;
+    default:
+      die();
+      return 1;
+    }
+    break;
   default:
     die();
     return 1;
