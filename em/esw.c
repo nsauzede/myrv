@@ -1,3 +1,6 @@
+#include <unistd.h>
+
+#ifdef __riscv
 int foo(int a, int b);
 void start() {
   int *a = (int *)0x2000;
@@ -9,7 +12,11 @@ void start() {
   asm volatile("ebreak");
 }
 
-int foo(int a, int b) { return a + b; }
+#endif
+int foo(int a, int b) {
+  return a + b;
+}
 int main() {
-	return 0;
+  write(1, "Hello world\n", 12);
+	return foo(-2, -3);
 }
