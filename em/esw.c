@@ -1,6 +1,13 @@
 #include <unistd.h>
 
 #ifdef __riscv
+#define EBREAK asm volatile("ebreak")
+
+void start();
+void _start() { start(); }
+
+void first_func() { EBREAK; }
+
 int foo(int a, int b);
 void start() {
   int *a = (int *)0x2000;
@@ -9,9 +16,8 @@ void start() {
 
   *c = foo(*a, *b);
 
-  asm volatile("ebreak");
+  EBREAK;
 }
-void _start() { start(); }
 #endif
 int foo(int a, int b) {
   write(1, "Hello world\n", 12);
