@@ -16,6 +16,8 @@ rv_test: rv_test.c rv.c
 em: em.c rv.c | em_esw.bin
 	$(CC) $(CFLAGS) -o $@ $^
 
+elf:LDLIBS+=-lelf
+
 esw.bin: esw.c
 #	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -nostdlib -Ttext=0 -o esw
 	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
@@ -32,4 +34,4 @@ esw.bin: esw.c
 #	od -tx1 $@
 
 clean:
-	$(RM) *.o *.bin rv_test em esw
+	$(RM) *.o *.bin rv_test em esw elf

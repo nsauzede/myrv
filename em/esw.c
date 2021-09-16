@@ -3,10 +3,10 @@
 #ifdef __riscv
 #define EBREAK asm volatile("ebreak")
 
+void first_func() { EBREAK; }
+
 void start();
 void _start() { start(); }
-
-void first_func() { EBREAK; }
 
 int foo(int a, int b);
 void start() {
