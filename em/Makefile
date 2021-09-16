@@ -18,7 +18,7 @@ em: em.c rv.c | em_esw.bin
 
 esw.bin: esw.c
 #	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -nostdlib -Ttext=0 -o esw
-	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw
+	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
 #	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objdump -d -S esw
 	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-objcopy -Obinary esw $@
 #	od -tx1 $@

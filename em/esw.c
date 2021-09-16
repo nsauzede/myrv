@@ -11,7 +11,7 @@ void start() {
 
   asm volatile("ebreak");
 }
-
+void _start() { start(); }
 #endif
 int foo(int a, int b) {
   write(1, "Hello world\n", 12);
