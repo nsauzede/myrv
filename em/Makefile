@@ -7,6 +7,13 @@ CFLAGS+=-g -O0
 
 all: $(TARGET)
 
+HAVE_ELF:=1
+ifdef HAVE_ELF
+em:LDLIBS+=-lelf
+endif
+
+elf:LDLIBS+=-lelf
+
 test: rv_test
 	./rv_test
 
@@ -14,9 +21,7 @@ rv_test: rv_test.c rv.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 em: em.c rv.c | em_esw.bin
-	$(CC) $(CFLAGS) -o $@ $^
-
-elf:LDLIBS+=-lelf
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 esw.bin: esw.c
 #	../../riscv-gnu-toolchain/the_install/bin/riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -nostdlib -Ttext=0 -o esw
