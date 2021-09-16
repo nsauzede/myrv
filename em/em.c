@@ -8,40 +8,32 @@
 uint32_t mem_start = 0;
 uint32_t mem_len = 0x4000;
 unsigned char *mem = 0;
-uint32_t rv_read32(uint32_t addr)
-{
+uint32_t rv_read32(uint32_t addr) {
   uint32_t val = 0;
-  if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len))
-  {
+  if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len)) {
     memcpy(&val, mem + addr - mem_start, 4);
   }
   return val;
 }
 
-int rv_write32(uint32_t addr, uint32_t val)
-{
-  if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len))
-  {
+int rv_write32(uint32_t addr, uint32_t val) {
+  if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len)) {
     memcpy(mem + addr - mem_start, &val, 4);
     return 0;
   }
   return 1;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   uint32_t start_pc = 0;
   uint32_t start_sp = 0x2000;
   char *fin = "em_esw.bin";
   int arg = 1;
-  if (arg < argc)
-  {
+  if (arg < argc) {
     fin = argv[arg++];
-    if (arg < argc)
-    {
+    if (arg < argc) {
       sscanf(argv[arg++], "%" SCNx32, &start_pc);
-      if (arg < argc)
-      {
+      if (arg < argc) {
         sscanf(argv[arg++], "%" SCNx32, &start_sp);
       }
     }
@@ -58,10 +50,8 @@ int main(int argc, char *argv[])
 
   rv_write32(0x2000, -2);
   rv_write32(0x2004, -3);
-  while (1)
-  {
-    if (rv_execute(&ctx))
-    {
+  while (1) {
+    if (rv_execute(&ctx)) {
       printf("RV execution stopped\n");
       break;
     }

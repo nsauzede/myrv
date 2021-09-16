@@ -14,9 +14,7 @@ void start() {
 
 #endif
 int foo(int a, int b) {
+  write(1, "Hello world\n", 12);
   return a + b;
 }
-int main() {
-  write(1, "Hello world\n", 12);
-	return foo(-2, -3);
-}
+int main() { return foo(-2, -3); }

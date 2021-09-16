@@ -90,7 +90,7 @@ int rv_test() {
   assert(8 == ctx.pc); // test incremented PC
   assert(7 == ctx.a0); // test sub+move
   assert(0 == rv_execute(&ctx));
-//   assert(0x00008067 == ctx.last_insn);
+  //   assert(0x00008067 == ctx.last_insn);
   assert(0x00000013 == ctx.last_insn);
 
   assert(0 == rv_execute(&ctx));

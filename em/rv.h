@@ -7,6 +7,18 @@
 #define RV32M
 
 typedef enum {
+  // opcode
+  RV_LUI = 0x37,
+  RV_AUIPC = 0x17,
+  RV_JAL = 0x6f,
+  RV_JALR = 0x67,
+  RV_BRANCH = 0x63,
+  RV_LOAD = 0x03,
+  RV_STORE = 0x23,
+  RV_OP_IMM = 0x13,
+  RV_OP = 0x33,
+  RV_MISC_MEM = 0x0f,
+  RV_SYSTEM = 0x73,
   // funct3
   RV_SLLI = 0x1,
   RV_SR_I = 0x5,
@@ -21,7 +33,9 @@ typedef enum {
   RV_ADDI = 0x0,
   RV_LW = 0x2,
   RV_SW = 0x2,
-  RV_PRIV=0x0,
+  RV_PRIV = 0x0,
+  RV_BLT = 0x4,
+  RV_BEQ = 0x0,
   // funct7
   RV_S_LI = 0x00,
   RV_S_AI = 0x20,
@@ -32,21 +46,9 @@ typedef enum {
   RV_DIV = 0x01,
   RV_REM = 0x01,
 #endif
-// funct12
-RV_ECALL=0x000,
-RV_EBREAK=0x001,
-  // opcode
-  RV_LUI = 0x37,
-  RV_AUIPC = 0x17,
-  RV_JAL = 0x6f,
-  RV_JALR = 0x67,
-  RV_BRANCH = 0x63,
-  RV_LOAD = 0x03,
-  RV_STORE = 0x23,
-  RV_OP_IMM = 0x13,
-  RV_OP = 0x33,
-  RV_MISC_MEM = 0x0f,
-  RV_SYSTEM = 0x73,
+  // funct12
+  RV_ECALL = 0x000,
+  RV_EBREAK = 0x001,
 } rv_opc;
 
 typedef union {

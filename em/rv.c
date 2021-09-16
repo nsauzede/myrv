@@ -74,7 +74,7 @@ int rv_execute(rv_ctx *ctx) {
   if (ctx->pc % 4) {
     return 2;
   }
-  //   printf("%08" PRIx32 ": ", ctx->pc);
+  printf("%08" PRIx32 ": x0=%" PRIx32 " ", ctx->pc, ctx->x[0]);
   if (rv_fetch(ctx)) {
     die();
     return 1;
@@ -82,7 +82,7 @@ int rv_execute(rv_ctx *ctx) {
 
   rv_insn i;
   i.insn = ctx->last_insn;
-  //   rv_print_insn(ctx->last_insn);
+  rv_print_insn(ctx->last_insn);
 
   switch (i.opc) {
   case RV_OP_IMM:
@@ -94,7 +94,8 @@ int rv_execute(rv_ctx *ctx) {
         printf("SLLI rd=%s funct3=%" PRIx8 " rs1=%s imm4_0=%" PRIx32,
                rv_rname(i.sh.rd), i.sh.funct3, rv_rname(i.sh.rs1),
                i.sh.imm_4_0);
-        ctx->x[i.sh.rd] = ctx->x[i.sh.rs1] << i.sh.imm_4_0;
+        if (i.sh.rd)
+          ctx->x[i.sh.rd] = ctx->x[i.sh.rs1] << i.sh.imm_4_0;
         break;
       default:
         die();
@@ -104,7 +105,8 @@ int rv_execute(rv_ctx *ctx) {
     case RV_ADDI:
       printf("ADDI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
              rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
-      ctx->x[i.i.rd] = ctx->x[i.i.rs1] + rv_signext(i.i.imm_11_0, 11);
+      if (i.i.rd)
+        ctx->x[i.i.rd] = ctx->x[i.i.rs1] + rv_signext(i.i.imm_11_0, 11);
       break;
     default:
       die();
@@ -124,18 +126,21 @@ int rv_execute(rv_ctx *ctx) {
       case RV_SUB:
         printf("SUB rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
-        ctx->x[i.r.rd] = ctx->x[i.r.rs1] - ctx->x[i.r.rs2];
+        if (i.r.rd)
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] - ctx->x[i.r.rs2];
         break;
       case RV_ADD:
         printf("ADD rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
-        ctx->x[i.r.rd] = ctx->x[i.r.rs1] + ctx->x[i.r.rs2];
+        if (i.r.rd)
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] + ctx->x[i.r.rs2];
         break;
 #ifdef RV32M
       case RV_MUL:
         printf("MUL rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
-        ctx->x[i.r.rd] = ctx->x[i.r.rs1] * ctx->x[i.r.rs2];
+        if (i.r.rd)
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] * ctx->x[i.r.rs2];
         break;
 #endif
       default:
@@ -153,7 +158,8 @@ int rv_execute(rv_ctx *ctx) {
       case RV_DIV:
         printf("DIV rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
-        ctx->x[i.r.rd] = ctx->x[i.r.rs1] / ctx->x[i.r.rs2];
+        if (i.r.rd)
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] / ctx->x[i.r.rs2];
         break;
 #endif
       default:
@@ -171,7 +177,8 @@ int rv_execute(rv_ctx *ctx) {
       case RV_REM:
         printf("DIV rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s", rv_rname(i.r.rd),
                i.r.funct3, rv_rname(i.r.rs1), rv_rname(i.r.rs2));
-        ctx->x[i.r.rd] = ctx->x[i.r.rs1] % ctx->x[i.r.rs2];
+        if (i.r.rd)
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] % ctx->x[i.r.rs2];
         break;
 #endif
       default:
@@ -187,7 +194,8 @@ int rv_execute(rv_ctx *ctx) {
     break;
   case RV_LUI:
     printf("LUI rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.u.rd), i.u.imm_31_12);
-    ctx->x[i.u.rd] = i.u.imm_31_12 << 12;
+    if (i.u.rd)
+      ctx->x[i.u.rd] = i.u.imm_31_12 << 12;
     break;
   case RV_LOAD:
     printf("LOAD ");
@@ -196,7 +204,8 @@ int rv_execute(rv_ctx *ctx) {
       uint32_t imm = i.i.imm_11_0;
       printf("LW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32, rv_rname(i.i.rd),
              i.i.funct3, rv_rname(i.i.rs1), imm);
-      ctx->x[i.i.rd] = ctx->read32(ctx->x[i.r.rs1] + imm);
+      if (i.r.rd)
+        ctx->x[i.i.rd] = ctx->read32(ctx->x[i.r.rs1] + imm);
       break;
     }
     default:
@@ -205,6 +214,48 @@ int rv_execute(rv_ctx *ctx) {
     }
     printf("\n");
     break;
+
+  case RV_BRANCH:
+    printf("BRANCH ");
+    switch (i.r.funct3) {
+    case RV_BLT: {
+      uint32_t imm = (i.b.imm_12 << 12) + (i.b.imm_11 << 11) +
+                     (i.b.imm_10_5 << 5) + (i.b.imm_4_1 << 1);
+      printf("BLT rs1=%s rs2=%s imm=%" PRIx32 "\n", rv_rname(i.b.rs1),
+             rv_rname(i.b.rs2), imm);
+      //   printf("rs1=%" PRIx32 " rs2=%" PRIx32 "\n",
+      //   ctx->x[i.b.rs1],ctx->x[i.b.rs2]); printf("addr=%" PRIx32 "\n",
+      //   ctx->pc - 4 + imm);
+      if (ctx->x[i.b.rs1] < ctx->x[i.b.rs2]) {
+        // printf("Take the branch\n");
+        ctx->pc = ctx->pc - 4 + imm;
+      } else {
+        // printf("Don't take the branch\n");
+      }
+      break;
+    }
+    case RV_BEQ: {
+      uint32_t imm = (i.b.imm_12 << 12) + (i.b.imm_11 << 11) +
+                     (i.b.imm_10_5 << 5) + (i.b.imm_4_1 << 1);
+      printf("BEQ rs1=%s rs2=%s imm=%" PRIx32 "\n", rv_rname(i.b.rs1),
+             rv_rname(i.b.rs2), imm);
+      //   printf("rs1=%" PRIx32 " rs2=%" PRIx32 "\n", ctx->x[i.b.rs1],
+      //          ctx->x[i.b.rs2]);
+      //   printf("addr=%" PRIx32 "\n", ctx->pc - 4 + imm);
+      if (ctx->x[i.b.rs1] == ctx->x[i.b.rs2]) {
+        // printf("Take the branch\n");
+        ctx->pc = ctx->pc - 4 + imm;
+      } else {
+        // printf("Don't take the branch\n");
+      }
+      break;
+    }
+    default:
+      die();
+      return 1;
+    }
+    break;
+
   case RV_STORE:
     printf("STORE ");
     switch (i.r.funct3) {
@@ -221,17 +272,20 @@ int rv_execute(rv_ctx *ctx) {
       return 1;
     }
     break;
+
   case RV_AUIPC:
     printf("AUIPC rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.u.rd),
            i.u.imm_31_12);
-    ctx->x[i.u.rd] = (i.u.imm_31_12 << 12) + ctx->pc - 4;
+    if (i.u.rd)
+      ctx->x[i.u.rd] = (i.u.imm_31_12 << 12) + ctx->pc - 4;
     break;
 
   case RV_JAL: {
     uint32_t imm = (i.j.imm_20 << 20) + (i.j.imm_19_12 << 12) +
                    (i.j.imm11 << 11) + (i.j.imm_10_1 << 1);
     printf("JAL rd=%s imm=%" PRIx32 "\n", rv_rname(i.j.rd), imm);
-    ctx->x[i.j.rd] = ctx->pc;
+    if (i.j.rd)
+      ctx->x[i.j.rd] = ctx->pc;
     ctx->pc = imm + ctx->pc - 4;
     break;
   }
@@ -239,7 +293,8 @@ int rv_execute(rv_ctx *ctx) {
   case RV_JALR:
     printf("JALR rd=%s rs1=%s imm11_0=%" PRIx32 "\n", rv_rname(i.i.rd),
            rv_rname(i.i.rs1), i.i.imm_11_0);
-    ctx->x[i.i.rd] = ctx->pc;
+    if (i.i.rd)
+      ctx->x[i.i.rd] = ctx->pc;
     ctx->pc = (i.i.imm_11_0 + ctx->x[i.i.rs1]) & ~1;
     break;
 
@@ -250,6 +305,10 @@ int rv_execute(rv_ctx *ctx) {
       case RV_EBREAK:
         printf("BREAK\n");
         return 1;
+        break;
+      case RV_ECALL:
+        printf("ECALL\n");
+        // die();
         break;
       default:
         die();
