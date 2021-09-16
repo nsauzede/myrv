@@ -111,13 +111,13 @@ int main(int argc, char *argv[]) {
   mem = calloc(mem_len, 1);
 #ifdef HAVE_ELF
   if (!elf_load(fin, &start_pc)) {
-    printf("loaded ELF\n");
+    printf("[Loaded ELF]\n");
   } else {
 #endif
     FILE *in = fopen(fin, "rb");
     fread(mem, mem_len, 1, in);
     fclose(in);
-    printf("loaded flat binary\n");
+    printf("[Loaded flat binary]\n");
 #ifdef HAVE_ELF
   }
 #endif
@@ -131,12 +131,12 @@ int main(int argc, char *argv[]) {
   rv_write32(0x2004, -3);
   while (1) {
     if (rv_execute(&ctx)) {
-      printf("RV execution stopped\n");
+      // printf("RV execution stopped\n");
       break;
     }
   }
   int val = rv_read32(0x2008);
-  printf("%d\n", val);
+  printf("[Memory state at finish : %d (should be -5)]\n", val);
 
   return 0;
 }

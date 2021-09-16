@@ -9,7 +9,7 @@ static uint32_t mem2004 = 0;
 static uint32_t mem2008 = 0;
 
 int rv_write32(uint32_t addr, uint32_t val) {
-  printf(" WRITE(%" PRIx32 ",%" PRIx32 ") ", addr, val);
+  // printf(" WRITE(%" PRIx32 ",%" PRIx32 ") ", addr, val);
   switch (addr) {
   case 0x2000:
     mem2000 = val;
@@ -29,7 +29,7 @@ int rv_write32(uint32_t addr, uint32_t val) {
 uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) { return 0; }
 
 uint32_t rv_read32(uint32_t addr) {
-  printf(" READ(%" PRIx32 ") ", addr);
+  // printf(" READ(%" PRIx32 ") ", addr);
   switch (addr) {
   case 0 * 4:
     return 0x00351793; // slli a5,a0,0x3
