@@ -11,14 +11,15 @@
     printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
     if (ctx) {                                                                 \
       printf("PC=%08" PRIx32 " ", ctx->pc);                                    \
-      rv_print_insn(ctx->last_insn);                                           \
+      rv_print_insn(ctx);                                                      \
     }                                                                          \
     exit(1);                                                                   \
   } while (0)
 
-void rv_print_insn(uint32_t insn) {
+void rv_print_insn(rv_ctx *ctx) {
+  printf("%08" PRIx32 ": x0=%" PRIx32 " ", ctx->pc, ctx->x[0]);
   rv_insn i;
-  i.insn = insn;
+  i.insn = ctx->last_insn;
   printf("0x%08" PRIx32 " ", i.insn);
   printf("func7=%" PRIx8 " ", i.r.funct7);
   printf("rs2=%" PRIx32 " ", i.r.rs2);
@@ -28,11 +29,13 @@ void rv_print_insn(uint32_t insn) {
   printf("opc=%" PRIx8 "\n", i.r.opc);
 }
 
-int rv_init(rv_ctx *ctx, rv_read32_cb rv_read32, rv_write32_cb rv_write32) {
-  if (!ctx || !rv_read32 || !rv_write32) {
+int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_read32_cb rv_read32,
+            rv_write32_cb rv_write32) {
+  if (!ctx || !rv_read || !rv_read32 || !rv_write32) {
     return 1;
   }
   memset(ctx, 0, sizeof(*ctx));
+  ctx->read = rv_read;
   ctx->read32 = rv_read32;
   ctx->write32 = rv_write32;
   return 0;
@@ -74,7 +77,6 @@ int rv_execute(rv_ctx *ctx) {
   if (ctx->pc % 4) {
     return 2;
   }
-  printf("%08" PRIx32 ": x0=%" PRIx32 " ", ctx->pc, ctx->x[0]);
   if (rv_fetch(ctx)) {
     die();
     return 1;
@@ -82,7 +84,7 @@ int rv_execute(rv_ctx *ctx) {
 
   rv_insn i;
   i.insn = ctx->last_insn;
-  rv_print_insn(ctx->last_insn);
+  //   rv_print_insn(ctx);
 
   switch (i.opc) {
   case RV_OP_IMM:
@@ -307,8 +309,21 @@ int rv_execute(rv_ctx *ctx) {
         return 1;
         break;
       case RV_ECALL:
-        printf("ECALL\n");
-        // die();
+        printf("ECALL rd=%s rs1=%s a7=%" PRIx32 " ", rv_rname(i.sy.rd),
+               rv_rname(i.sy.rs1), ctx->a7);
+        switch (ctx->a7) {
+        case 64: {
+          printf("write a1=%" PRIx32 " a2=%" PRIx32 ": ", ctx->a1, ctx->a2);
+          char *buf = calloc(ctx->a2 + 1, 1);
+          ctx->read(buf, ctx->a1, ctx->a2);
+          printf("%s", buf);
+          free(buf);
+          break;
+        }
+        default:
+          die();
+          return 1;
+        }
         break;
       default:
         die();

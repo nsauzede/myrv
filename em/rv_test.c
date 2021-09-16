@@ -7,6 +7,7 @@
 static uint32_t mem2000 = 0;
 static uint32_t mem2004 = 0;
 static uint32_t mem2008 = 0;
+
 int rv_write32(uint32_t addr, uint32_t val) {
   printf(" WRITE(%" PRIx32 ",%" PRIx32 ") ", addr, val);
   switch (addr) {
@@ -24,6 +25,9 @@ int rv_write32(uint32_t addr, uint32_t val) {
   }
   return 0;
 }
+
+uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) { return 0; }
+
 uint32_t rv_read32(uint32_t addr) {
   printf(" READ(%" PRIx32 ") ", addr);
   switch (addr) {
@@ -63,11 +67,11 @@ uint32_t rv_read32(uint32_t addr) {
 
 int rv_test() {
   // test bad input params
-  assert(1 == rv_init(0, 0, 0));
+  assert(1 == rv_init(0, 0, 0, 0));
   assert(1 == rv_execute(0));
   // test good input params
   rv_ctx ctx;
-  assert(0 == rv_init(&ctx, rv_read32, rv_write32));
+  assert(0 == rv_init(&ctx, rv_read, rv_read32, rv_write32));
   assert(0 == ctx.pc); // test initial PC
   assert(0 == ctx.a0); // test initial a0
   assert(0 == ctx.a5); // test initial a5

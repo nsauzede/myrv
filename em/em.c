@@ -8,6 +8,15 @@
 uint32_t mem_start = 0;
 uint32_t mem_len = 0x4000;
 unsigned char *mem = 0;
+
+uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
+  uint32_t ret = 0;
+  if (dest && (addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
+    memcpy(dest, mem + addr - mem_start, size);
+  }
+  return ret;
+}
+
 uint32_t rv_read32(uint32_t addr) {
   uint32_t val = 0;
   if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len)) {
@@ -44,7 +53,7 @@ int main(int argc, char *argv[]) {
   fclose(in);
 
   rv_ctx ctx;
-  rv_init(&ctx, rv_read32, rv_write32);
+  rv_init(&ctx, rv_read, rv_read32, rv_write32);
   ctx.sp = start_sp;
   ctx.pc = start_pc;
 

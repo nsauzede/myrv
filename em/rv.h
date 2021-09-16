@@ -82,10 +82,13 @@ typedef union {
   } sy;
 } rv_insn;
 
+typedef uint32_t (*rv_read_cb)(void *dest, uint32_t addr, uint32_t size);
+typedef uint32_t (*rv_read32_cb)(uint32_t addr);
 typedef uint32_t (*rv_read32_cb)(uint32_t addr);
 typedef int (*rv_write32_cb)(uint32_t addr, uint32_t val);
 
 typedef struct rv_ctx {
+  rv_read_cb read;
   rv_read32_cb read32;
   rv_write32_cb write32;
   uint32_t last_insn;
@@ -99,5 +102,6 @@ typedef struct rv_ctx {
   uint32_t pc;
 } rv_ctx;
 
-int rv_init(rv_ctx *ctx, rv_read32_cb rv_read32, rv_write32_cb rv_write32);
+int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_read32_cb rv_read32,
+            rv_write32_cb rv_write32);
 int rv_execute(rv_ctx *ctx);
