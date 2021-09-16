@@ -1,6 +1,10 @@
 # myrv_
 
 RISC-V experiments
+Basically a simple RV32I emulator + test ESW written from scratch, base on the following documentation:
+- [RV specs](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf)
+- [RV32I cheat sheet](https://metalcode.eu/2019-12-06-rv32i.html)
+- [RV home](https://riscv.org/technical/specifications/)
 
 # Prerequisites
 In order to build native RISC-V esw, you must have a riscv toolchain available in your PATH:
