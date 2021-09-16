@@ -6,10 +6,15 @@ Basically a simple RV32I emulator written from scratch (along with small test ES
 - [RV32I cheat sheet](https://metalcode.eu/2019-12-06-rv32i.html)
 - [RV home](https://riscv.org/technical/specifications/)
 
-# Prerequisites
+## Prerequisites
 In order to build native RISC-V esw, you must have a riscv toolchain available in your PATH:
 - Clone https://github.com/riscv-software-src/riscv-gnu-toolchain
 - Make sure autoconf, GNU awk, flex, bison and texinfo are installed, E.g.:
   - `sudo apt install gawk flex bison texinfo`
 - `./configure --prefix=$PWD/the_install --with-arch=rv32g --with-abi=ilp32d && make`
 
+## Test it!
+```
+cd em
+make clean all test em esw.bin && ./em esw.bin
+```
