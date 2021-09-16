@@ -24,6 +24,6 @@ cc -Wall -Werror -g -O0 -o em em.c rv.c -lelf
 riscv32-unknown-elf-gcc esw.c -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
 ./em esw
 [Loaded ELF]
-Hello world
+Hello riscv
 [Memory state at finish : -5 (should be -5)]
 ```
