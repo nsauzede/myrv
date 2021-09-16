@@ -1,4 +1,4 @@
-# myrv_
+# myrv
 
 RISC-V experiments
 Basically a simple RV32I emulator + test ESW written from scratch, base on the following documentation:
