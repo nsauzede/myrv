@@ -20,7 +20,11 @@ void start() {
 }
 #endif
 int foo(int a, int b) {
+#ifdef __riscv
+  write(1, "Hello riscv\n", 12);
+#else
   write(1, "Hello world\n", 12);
+#endif
   return a + b;
 }
 int main() { return foo(-2, -3); }
