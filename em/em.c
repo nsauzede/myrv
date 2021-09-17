@@ -15,8 +15,15 @@
 #include "rv.h"
 
 uint32_t mem_start = 0;
-uint32_t mem_len = 0x4000;
+// uint32_t mem_len = 0x4000;
+uint32_t mem_len = 0x400000;
 unsigned char *mem = 0;
+
+int do_qcheck = 0;
+
+int qinit(rv_ctx *ctx) { return 0; }
+
+int qcheck(rv_ctx *ctx) { return 0; }
 
 uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
   uint32_t ret = 0;
@@ -32,6 +39,14 @@ uint32_t rv_write(const void *src, uint32_t addr, uint32_t size) {
     memcpy(mem + addr - mem_start, src, size);
   }
   return ret;
+}
+
+uint8_t rv_read8(uint32_t addr) {
+  uint8_t val = 0;
+  if ((addr >= mem_start) && (addr + 1 <= mem_start + mem_len)) {
+    memcpy(&val, mem + addr - mem_start, 1);
+  }
+  return val;
 }
 
 uint32_t rv_read32(uint32_t addr) {
@@ -102,9 +117,19 @@ int main(int argc, char *argv[]) {
   int pos = 0;
   int arg = 1;
   while (arg < argc) {
+    if (!strcmp(argv[arg], "-q")) {
+      arg++;
+      do_qcheck = 1;
+      continue;
+    }
     if (!strcmp(argv[arg], "-v")) {
       arg++;
       log++;
+      continue;
+    }
+    if (!strcmp(argv[arg], "-vv")) {
+      arg++;
+      log += 2;
       continue;
     }
     if (pos == 0) {
@@ -140,13 +165,19 @@ int main(int argc, char *argv[]) {
 
   rv_ctx ctx;
   rv_set_log(&ctx, log);
-  rv_init(&ctx, rv_read, rv_read32, rv_write32);
+  rv_init(&ctx, rv_read, rv_write, rv_read8, rv_read32, rv_write32);
   ctx.sp = start_sp;
   ctx.pc = start_pc;
 
   rv_write32(0x2000, -2);
   rv_write32(0x2004, -3);
   while (1) {
+    if (do_qcheck) {
+      if (qcheck(&ctx)) {
+        printf("[qcheck failed]\n");
+        return 1;
+      }
+    }
     if (rv_execute(&ctx)) {
       // printf("RV execution stopped\n");
       break;

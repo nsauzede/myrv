@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <unistd.h>
-
+#include <stdlib.h>
 #ifdef __riscv
 #define EBREAK asm volatile("ebreak")
 
 void first_func() { EBREAK; }
 
 void start();
-void _start() { start(); }
+// void _start() { start(); }
 
 int foo(int a, int b);
 void start() {
@@ -16,17 +16,21 @@ void start() {
   int *c = (int *)0x2008;
 
   *c = foo(*a, *b);
+  // *(uint32_t *)0x2008 = foo(*a, *b);
 
   EBREAK;
+  exit(1);
 }
 #endif
 int foo(int a, int b) {
 #ifdef __riscv
-  write(1, "Hello riscv\n", 12);
+#define GREETING "Hello riscv\n"
 #else
-  write(1, "Hello world\n", 12);
+#define GREETING "Hello world\n"
 #endif
+  // write(1, GREETING, 12);
   // printf("hello printf\n");
   return a + b;
+  // return -5;
 }
 int main() { return foo(-2, -3); }

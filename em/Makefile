@@ -14,8 +14,15 @@ endif
 
 elf:LDLIBS+=-lelf
 
-test: em esw
-	./em esw
+ifdef V
+# VERBOSE:=-v -v
+VERBOSE:=-v
+endif
+# test: em esw
+# 	./em esw $(VERBOSE)
+
+test: em em_esw
+	./em em_esw $(VERBOSE)
 
 check: rv_test
 	./rv_test
@@ -27,7 +34,8 @@ em: em.c rv.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 esw: esw.c
-	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
+#	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
+	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -o esw
 
 esw.bin: esw
 	riscv32-unknown-elf-objcopy -Obinary esw $@
