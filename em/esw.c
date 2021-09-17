@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <unistd.h>
 
 #ifdef __riscv
@@ -25,6 +26,7 @@ int foo(int a, int b) {
 #else
   write(1, "Hello world\n", 12);
 #endif
+  // printf("hello printf\n");
   return a + b;
 }
 int main() { return foo(-2, -3); }

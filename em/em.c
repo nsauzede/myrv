@@ -97,17 +97,33 @@ int elf_load(char *fname, uint32_t *entry) {
 int main(int argc, char *argv[]) {
   uint32_t start_pc = 0;
   uint32_t start_sp = 0x2000;
-  char *fin = "em_esw.bin";
+  char *fin = "esw";
+  int log = 0;
+  int pos = 0;
   int arg = 1;
-  if (arg < argc) {
-    fin = argv[arg++];
-    if (arg < argc) {
+  while (arg < argc) {
+    if (!strcmp(argv[arg], "-v")) {
+      arg++;
+      log++;
+      continue;
+    }
+    if (pos == 0) {
+      fin = argv[arg++];
+      pos++;
+      continue;
+    }
+    if (pos == 1) {
       sscanf(argv[arg++], "%" SCNx32, &start_pc);
-      if (arg < argc) {
-        sscanf(argv[arg++], "%" SCNx32, &start_sp);
-      }
+      pos++;
+      continue;
+    }
+    if (pos == 2) {
+      sscanf(argv[arg++], "%" SCNx32, &start_sp);
+      pos++;
+      continue;
     }
   }
+
   mem = calloc(mem_len, 1);
 #ifdef HAVE_ELF
   if (!elf_load(fin, &start_pc)) {
@@ -123,6 +139,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   rv_ctx ctx;
+  rv_set_log(&ctx, log);
   rv_init(&ctx, rv_read, rv_read32, rv_write32);
   ctx.sp = start_sp;
   ctx.pc = start_pc;

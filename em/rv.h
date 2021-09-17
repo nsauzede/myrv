@@ -102,6 +102,7 @@ typedef struct rv_ctx {
   uint32_t pc;
 } rv_ctx;
 
+int rv_set_log(rv_ctx *ctx, int log);
 int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_read32_cb rv_read32,
             rv_write32_cb rv_write32);
 int rv_execute(rv_ctx *ctx);
