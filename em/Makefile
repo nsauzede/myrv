@@ -1,5 +1,6 @@
 TARGET:=rv_test
-#TARGET+=em
+TARGET+=em
+TARGET+=esw
 #TARGET+=em_esw.bin
 
 CFLAGS:=-Wall -Werror
@@ -35,10 +36,13 @@ em: em.c rv.c
 
 esw: esw.c
 #	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
-	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -o esw
+	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o $@
 
 esw.bin: esw
 	riscv32-unknown-elf-objcopy -Obinary esw $@
+
+em_esw: em_esw.o
+	riscv32-unknown-elf-gcc $< -o $@ -nostartfiles
 
 %.o: %.s
 	riscv32-unknown-elf-as -o $@ $<
@@ -47,4 +51,4 @@ esw.bin: esw
 	riscv32-unknown-elf-objcopy -Obinary $< $@
 
 clean:
-	$(RM) *.o *.bin rv_test em esw elf
+	$(RM) *.o *.bin rv_test em em_esw esw elf qcheck

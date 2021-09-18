@@ -7,23 +7,51 @@
 
 typedef void rv_ctx;
 
-int wait_for(int fd, char *prompt) {
+int get_line(int fd, char *buf, size_t size) {
+  char *ptr = buf;
+  size_t len = 0;
+  while (1) {
+    if (len >= size)
+      break;
+    if (read(fd, ptr, 1) <= 0) {
+      return 1;
+    }
+    if (*ptr == '\n')
+      break;
+    ptr++;
+    len++;
+  }
+
+  return 0;
+}
+
+int wait_for(int fd, char *prompt, char *prefix, int quit_on_output,
+             int print_all) {
   while (1) {
     char buf[1024];
     memset(buf, 0, sizeof(buf));
-    if (read(fd, buf, sizeof(buf)) <= 0)
-      break;
+    if (get_line(fd, buf, sizeof(buf)))
+      return 1;
     if (strstr(buf, prompt))
       break;
-    // printf("%s", buf);
+    if (buf[0] == '&') {
+      if (quit_on_output) {
+        printf("%s", buf);
+        return 1;
+      }
+    }
+    if (print_all)
+      printf("%s", buf);
+    if (prefix && !strncmp(prefix, buf, strlen(prefix)))
+      printf("%s", buf);
   }
   return 0;
 }
 
+static int pipe_to_qemu[2];
+static int pipe_from_qemu[2];
+static int pipe_fromerr_qemu[2];
 int qinit(rv_ctx *ctx) {
-  int pipe_to_qemu[2];
-  int pipe_from_qemu[2];
-  int pipe_fromerr_qemu[2];
   pipe(pipe_to_qemu);
   pipe(pipe_from_qemu);
   pipe(pipe_fromerr_qemu);
@@ -98,32 +126,44 @@ int qinit(rv_ctx *ctx) {
   close(pipe_fromerr_gdb[1]);
   printf("{gpid is %d}\n", gpid);
 
-  wait_for(pipe_from_gdb[0], "(gdb)");
-  printf("{Prompt}\n");
+  if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 1, 0))
+    return 1;
+  write(pipe_to_gdb[1], "disp/i $pc\n", 11);
+  if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
+    return 1;
   write(pipe_to_gdb[1], "info r\n", 7);
   int reg = 1;
   while (1) {
     char buf[1024];
     memset(buf, 0, sizeof(buf));
-    if (read(pipe_from_gdb[0], buf, sizeof(buf)) <= 0)
+    if (get_line(pipe_from_gdb[0], buf, sizeof(buf)))
       break;
-    printf("%s", buf);
-    if (!strncmp(buf, "~\"", 2)) {
+    // printf("%s", buf);
+    char *str = buf;
+    while (1) {
+      char *next = strstr(str, "~\"");
+      if (!next)
+        break;
       uint32_t val = 0;
       //~"ra             0
-      sscanf(&buf[17], "%" SCNx32, &val);
+      sscanf(next + 2, "%" SCNx32, &val);
       if (reg == 32) {
-        printf("reg pc=%" PRIx32 "\n", val);
+        printf("{reg pc=%" PRIx32 "}\n", val);
 
       } else {
-        printf("reg#%d=%" PRIx32 "\n", reg, val);
+        printf("{reg#%d=%" PRIx32 "}\n", reg, val);
       }
       reg++;
+      str = strchr(next, '\t');
+      if (!str)
+        break;
     }
     if (strstr(buf, "(gdb)"))
       break;
   }
-  printf("{Prompt}\n");
+  write(pipe_to_gdb[1], "disp\n", 5);
+  if (wait_for(pipe_from_gdb[0], "(gdb)", "~\"=> ", 0, 0))
+    return 1;
   write(pipe_to_gdb[1], "kill\n", 5);
   write(pipe_to_gdb[1], "quit\n", 5);
   printf("{Done}\n");

@@ -135,3 +135,4 @@ int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write,
             rv_read8_cb rv_read8, rv_read32_cb rv_read32,
             rv_write32_cb rv_write32);
 int rv_execute(rv_ctx *ctx);
+void rv_print_regs(rv_ctx *ctx);

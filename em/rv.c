@@ -97,7 +97,7 @@ void rv_print_regs(rv_ctx *ctx) {
     printf("%-15s0x%-8" PRIx32 "\t%-8" PRId32 "\n", rv_rname(i), ctx->x[i],
            ctx->x[i]);
   }
-  printf("%-15s0x%-8" PRIx32 "\n", "pc", ctx->pc - 4);
+  printf("%-15s0x%-8" PRIx32 "\n", "pc", ctx->pc);
 }
 
 int32_t rv_signext(int32_t val, int sbit) {
