@@ -136,3 +136,4 @@ int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write,
             rv_write32_cb rv_write32);
 int rv_execute(rv_ctx *ctx);
 void rv_print_regs(rv_ctx *ctx);
+char *rv_rname(uint8_t reg);
