@@ -328,11 +328,11 @@ int rv_execute(rv_ctx *ctx) {
 #endif
       switch (i.r.funct7) {
       case 0x00:
-        log_printf(1, "ADD rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+        log_printf(1, "AND rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
                    rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
                    rv_rname(i.r.rs2));
         if (i.r.rd)
-          ctx->x[i.r.rd] = ctx->x[i.r.rs1] + ctx->x[i.r.rs2];
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] & ctx->x[i.r.rs2];
         break;
       default:
         die();
@@ -441,7 +441,7 @@ int rv_execute(rv_ctx *ctx) {
       //   log_printf(1, "addr=%" PRIx32 "\n", ctx->pc - 4 + imm);
       if (ctx->x[i.b.rs1] == ctx->x[i.b.rs2]) {
         // log_printf(1, "Take the branch\n");
-        ctx->pc = ctx->pc - 4 + imm;
+        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
       } else {
         // log_printf(1, "Don't take the branch\n");
       }

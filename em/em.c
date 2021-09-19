@@ -224,13 +224,14 @@ int qcheck(rv_ctx *ctx) {
   }
   if (ret) {
     // 0x1ffff40        3
-    printf("%-15s%-8s\t%-8s\t   \t%-15s\n", "", "QEMU reg value", "",
+    printf("%-15s%-8s\t%-8s\t   %-15s\n", "", "QEMU reg value", "",
            "Our reg value");
     for (int i = 1; i < RV_REGS; i++) {
       printf("%-15s0x%-8" PRIx32 "\t%-8" PRId32, rv_rname(i), ctx_qemu.x[i],
              ctx_qemu.x[i]);
-      printf("\t%3s\t", ctx_qemu.x[i] != ctx->x[i] ? "***" : "");
-      printf("0x%-8" PRIx32 "\t%-8" PRId32, ctx->x[i], ctx->x[i]);
+      printf("\t%-3s", ctx_qemu.x[i] != ctx->x[i] ? "**" : "");
+      printf("%-15s0x%-8" PRIx32 "\t%-8" PRId32, rv_rname(i), ctx->x[i],
+             ctx->x[i]);
       printf("\n");
     }
     printf("%-15s0x%-8" PRIx32 "\n", "pc", ctx->pc);
@@ -244,8 +245,7 @@ int qcheck(rv_ctx *ctx) {
   write(pipe_to_gdb[1], "si\n", 3);
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
     return 1;
-  if (wait_for(pipe_from_gdb[0], "*stopped,reason=\"end-stepping-range\"", 0, 0,
-               1))
+  if (wait_for(pipe_from_gdb[0], "*stopped,reason=\"", 0, 0, 1))
     return 1;
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
     return 1;
