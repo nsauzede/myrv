@@ -513,7 +513,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "SW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
                  rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
       // uint32_t addr=ctx->read32(ctx->x[i.r.rs1] + imm);
-      ctx->write32(ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
+      ctx->write32(ctx->x[i.s.rs1] + rv_signext(imm, 11), ctx->x[i.s.rs2]);
       break;
     }
     default:
