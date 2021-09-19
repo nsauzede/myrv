@@ -403,7 +403,7 @@ int main(int argc, char *argv[]) {
 
   rv_ctx ctx;
   rv_set_log(&ctx, log);
-  rv_init(&ctx, rv_read, rv_write);
+  rv_init(&ctx, rv_read, rv_write, 0);
   ctx.sp = start_sp;
   ctx.pc = start_pc;
 

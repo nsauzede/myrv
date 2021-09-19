@@ -73,13 +73,15 @@ static uint32_t rv_write32(rv_ctx *ctx, uint32_t addr, uint32_t val) {
   return ctx->write(&val, addr, sizeof(val));
 }
 
-int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write) {
+int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write,
+            rv_ecall_cb rv_ecall) {
   if (!ctx || !rv_read || !rv_write) {
     return 1;
   }
   memset(ctx, 0, sizeof(*ctx));
   ctx->read = rv_read;
   ctx->write = rv_write;
+  ctx->ecall = rv_ecall;
   return 0;
 }
 

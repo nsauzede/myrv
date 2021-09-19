@@ -108,12 +108,16 @@ typedef union {
   } sy;
 } rv_insn;
 
+struct rv_ctx;
+
 typedef uint32_t (*rv_read_cb)(void *dest, uint32_t addr, uint32_t size);
 typedef uint32_t (*rv_write_cb)(const void *src, uint32_t addr, uint32_t size);
+typedef int (*rv_ecall_cb)(struct rv_ctx *ctx);
 
 typedef struct rv_ctx {
   rv_read_cb read;
   rv_write_cb write;
+  rv_ecall_cb ecall;
 
   uint32_t last_insn;
   union {
@@ -127,7 +131,8 @@ typedef struct rv_ctx {
 } rv_ctx;
 
 int rv_set_log(rv_ctx *ctx, int log);
-int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write);
+int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write,
+            rv_ecall_cb rv_ecall);
 int rv_execute(rv_ctx *ctx);
 void rv_print_regs(rv_ctx *ctx);
 char *rv_rname(uint8_t reg);
