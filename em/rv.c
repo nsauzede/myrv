@@ -568,6 +568,12 @@ int rv_execute(rv_ctx *ctx) {
           free(buf);
           break;
         }
+        case 93: {
+          log_printf(1, "exit a0=%" PRIx32 " \\\n",
+                     ctx->a0);
+          return 1;
+          break;
+        }
         default:
           die();
           return 1;

@@ -56,9 +56,9 @@ int wait_for(int fd, char *prompt, char *prefix, int quit_on_output,
         return 1;
     }
     if (print_all)
-      printf("%s", buf);
+      printf("(all) %s", buf);
     if (prefix && !strncmp(prefix, buf, strlen(prefix)))
-      printf("%s", buf);
+      printf("(prefix) %s", buf);
   }
   return 0;
 }
@@ -101,7 +101,7 @@ int qinit(rv_ctx *ctx) {
   close(pipe_to_qemu[0]);
   close(pipe_from_qemu[1]);
   close(pipe_fromerr_qemu[1]);
-  printf("{qpid is %d}\n", qpid);
+  // printf("{qpid is %d}\n", qpid);
 
   pipe(pipe_to_gdb);
   pipe(pipe_from_gdb);
@@ -142,21 +142,21 @@ int qinit(rv_ctx *ctx) {
   close(pipe_to_gdb[0]);
   close(pipe_from_gdb[1]);
   close(pipe_fromerr_gdb[1]);
-  printf("{gpid is %d}\n", gpid);
+  // printf("{gpid is %d}\n", gpid);
 
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 1, 0))
     return 1;
   // write(pipe_to_gdb[1], "disp/i $pc\n", 11);
   // if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
   //   return 1;
-  printf("{Done}\n");
+  // printf("{Done}\n");
   return 0;
 }
 
 int qcheck(rv_ctx *ctx) {
   int ret = 0;
-  static int count = 0;
-  printf("[qcheck #%d]\n", count++);
+  // static int count = 0;
+  // printf("[qcheck #%d]\n", count++);
   write(pipe_to_gdb[1], "info r\n", 7);
   int reg = 1;
   rv_ctx ctx_qemu;
@@ -237,7 +237,7 @@ int qcheck(rv_ctx *ctx) {
     printf("%-15s0x%-8" PRIx32 "\n", "pc", ctx->pc);
   } else {
     // printf("Our regs\n");
-    rv_print_regs(ctx);
+    // rv_print_regs(ctx);
   }
   // write(pipe_to_gdb[1], "disp\n", 5);
   // if (wait_for(pipe_from_gdb[0], "(gdb)", "~\"=> ", 0, 0))
@@ -245,7 +245,7 @@ int qcheck(rv_ctx *ctx) {
   write(pipe_to_gdb[1], "si\n", 3);
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
     return 1;
-  if (wait_for(pipe_from_gdb[0], "*stopped,reason=\"", 0, 0, 1))
+  if (wait_for(pipe_from_gdb[0], "*stopped,reason=\"", 0, 0, 0))
     return 1;
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
     return 1;
@@ -421,12 +421,12 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (!do_qcheck) {
-    printf("[Setting input params at 0x2000: -2 and -3 (will be added as a "
-           "result))]\n");
-    rv_write32(0x2000, -2);
-    rv_write32(0x2004, -3);
-  }
+  // if (!do_qcheck) {
+  //   printf("[Setting input params at 0x2000: -2 and -3 (will be added as a "
+  //          "result))]\n");
+  //   rv_write32(0x2000, -2);
+  //   rv_write32(0x2004, -3);
+  // }
   while (1) {
     if (do_qcheck) {
       static int count = 0;
@@ -441,8 +441,13 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-  int val = rv_read32(0x2008);
-  printf("[Memory state at finish : %d (should be -5)]\n", val);
-
+  // if (do_qcheck){
+  printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx.a0);
+  // }
+  // else
+  // {
+  //   int val = rv_read32(0x2008);
+  //   printf("[Memory state at finish : %d (should be -5)]\n", val);
+  // }
   return 0;
 }
