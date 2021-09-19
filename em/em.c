@@ -408,10 +408,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // if (!do_qcheck){
-  //   rv_write32(0x2000, -2);
-  // rv_write32(0x2004, -3);
-  // }
+  if (!do_qcheck) {
+  printf("[Setting input params at 0x2000: -2 and -3 (will be added as a result))]\n");
+    rv_write32(0x2000, -2);
+    rv_write32(0x2004, -3);
+  }
   while (1) {
     if (do_qcheck) {
       static int count = 0;

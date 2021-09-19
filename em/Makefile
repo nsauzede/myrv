@@ -1,6 +1,7 @@
 TARGET:=rv_test
 TARGET+=em
 TARGET+=esw
+TARGET+=em_esw
 #TARGET+=em_esw.bin
 
 CFLAGS:=-Wall -Werror

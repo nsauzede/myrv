@@ -28,5 +28,6 @@ riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
 ./em em_esw 
  Program#0: 464c457f
 [Loaded ELF]
+[Setting input params at 0x2000: -2 and -3 (will be added as a result))]
 [Memory state at finish : -5 (should be -5)]
 ```
