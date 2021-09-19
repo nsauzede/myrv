@@ -23,8 +23,8 @@ endif
 # test: em esw
 # 	./em esw $(VERBOSE)
 
-test: em em_esw
-	./em em_esw $(VERBOSE)
+test: em esw
+	./em esw $(VERBOSE)
 
 check: rv_test
 	./rv_test

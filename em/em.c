@@ -352,7 +352,7 @@ int elf_load(char *fname, uint32_t *entry) {
 int main(int argc, char *argv[]) {
   uint32_t start_pc = mem_start;
   uint32_t start_sp = mem_len;
-  char *fin = "em_esw";
+  char *fin = "esw";
   int log = 0;
   int pos = 0;
   int arg = 1;
