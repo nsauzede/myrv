@@ -1,3 +1,5 @@
+#define _GNU_SOURCE // for execvpe
+
 #include <fcntl.h>
 #include <malloc.h>
 #include <stdint.h>
@@ -16,7 +18,6 @@
 #include "rv.h"
 
 uint32_t mem_start = 0;
-// uint32_t mem_len = 0x4000;
 uint32_t mem_len = 0x2000000;
 unsigned char *mem = 0;
 
@@ -42,7 +43,6 @@ int get_line(int fd, char *buf, size_t size) {
 
 int wait_for(int fd, char *prompt, char *prefix, int quit_on_output,
              int print_all) {
-  // print_all = 1;
   while (1) {
     char buf[1024];
     memset(buf, 0, sizeof(buf));
@@ -51,7 +51,6 @@ int wait_for(int fd, char *prompt, char *prefix, int quit_on_output,
     if (strstr(buf, prompt))
       break;
     if (buf[0] == '&') {
-      //   printf("%s", buf);
       if (quit_on_output)
         return 1;
     }
@@ -84,15 +83,12 @@ int qinit(rv_ctx *ctx) {
     dup2(pipe_to_qemu[0], 0);
     dup2(pipe_from_qemu[1], 1);
     dup2(pipe_fromerr_qemu[1], 2);
-    // qemu-riscv32 -g 1234 -s 0x200 esw&
-    char *newargv[] = {"/usr/bin/qemu-riscv32", "-g", "1234",
-                       //  "-s",
-                       //  "0x1000",
-                       "-R", "0x2000000", "esw", NULL};
+    char *newargv[] = {"qemu-riscv32", "-g",  "1234", "-R",
+                       "0x2000000",    "esw", NULL};
     char *newenviron[] = {NULL};
 
-    execve(newargv[0], newargv, newenviron);
-    perror("execve"); /* execve() returns only on error */
+    execvpe(newargv[0], newargv, newenviron);
+    perror("execvpe"); /* execvpe() returns only on error */
     exit(EXIT_FAILURE);
   }
   default:
@@ -101,7 +97,6 @@ int qinit(rv_ctx *ctx) {
   close(pipe_to_qemu[0]);
   close(pipe_from_qemu[1]);
   close(pipe_fromerr_qemu[1]);
-  // printf("{qpid is %d}\n", qpid);
 
   pipe(pipe_to_gdb);
   pipe(pipe_from_gdb);
@@ -119,21 +114,11 @@ int qinit(rv_ctx *ctx) {
     dup2(pipe_to_gdb[0], 0);
     dup2(pipe_from_gdb[1], 1);
     dup2(pipe_fromerr_gdb[1], 2);
-    // riscv32-unknown-elf-gdb -q -nx -ex target\ remote\ 127.0.0.1:1234 esw
-    // -i=mi
-    char *newargv[] = {"/home/nico/perso/git/riscv-gnu-toolchain/the_install/"
-                       "bin/riscv32-unknown-elf-gdb",
-                       "-q",
-                       "-nx",
-                       "-ex",
-                       "target remote 127.0.0.1:1234",
-                       "esw",
-                       "-i=mi",
-                       NULL};
-    char *newenviron[] = {NULL};
+    char *newargv[] = {"riscv32-unknown-elf-gdb",      "-q",  "-nx",   "-ex",
+                       "target remote 127.0.0.1:1234", "esw", "-i=mi", NULL};
 
-    execve(newargv[0], newargv, newenviron);
-    perror("execve"); /* execve() returns only on error */
+    execvp(newargv[0], newargv);
+    perror("execvp"); /* execvp() returns only on error */
     exit(EXIT_FAILURE);
   }
   default:
@@ -142,21 +127,14 @@ int qinit(rv_ctx *ctx) {
   close(pipe_to_gdb[0]);
   close(pipe_from_gdb[1]);
   close(pipe_fromerr_gdb[1]);
-  // printf("{gpid is %d}\n", gpid);
 
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 1, 0))
     return 1;
-  // write(pipe_to_gdb[1], "disp/i $pc\n", 11);
-  // if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
-  //   return 1;
-  // printf("{Done}\n");
   return 0;
 }
 
 int qcheck(rv_ctx *ctx) {
   int ret = 0;
-  // static int count = 0;
-  // printf("[qcheck #%d]\n", count++);
   write(pipe_to_gdb[1], "info r\n", 7);
   int reg = 1;
   rv_ctx ctx_qemu;
@@ -165,33 +143,17 @@ int qcheck(rv_ctx *ctx) {
     memset(buf, 0, sizeof(buf));
     if (get_line(pipe_from_gdb[0], buf, sizeof(buf)))
       break;
-    // printf("buf=[%s]\n", buf);
     char *str = buf;
     while (1) {
       char *next = strstr(str, "~\"");
       if (!next)
         break;
-      // printf("next=[%s]\n", next);
       uint32_t val = 0;
-      //~"ra             0
       sscanf(next + 17, "%" SCNx32, &val);
       if (reg == 32) {
         ctx_qemu.pc = val;
-        // if (val != ctx->pc) {
-        //   printf("QEMU PC DIFFERENT!\n");
-        //   ret = 1;
-        //   break;
-        // }
       } else if (reg < 32) {
-        // printf("{reg#%d=%" PRIx32 "}\n", reg, val);
         ctx_qemu.x[reg] = val;
-        // if (reg != 2 && val != ctx->x[reg]) {
-        //   printf("QEMU x%d=%08" PRIx32 " DIFFERENT from our x%d=%08" PRIx32
-        //          "!\n",
-        //          reg, val, reg, ctx->x[reg]);
-        //   ret = 1;
-        //   break;
-        // }
       }
       if (ret)
         break;
@@ -206,9 +168,7 @@ int qcheck(rv_ctx *ctx) {
       break;
   }
   for (int reg = 1; reg < RV_REGS; reg++) {
-    if (
-        // reg != 2 &&
-        ctx_qemu.x[reg] != ctx->x[reg]) {
+    if (ctx_qemu.x[reg] != ctx->x[reg]) {
       printf("QEMU x%d=%08" PRIx32 " DIFFERENT from our x%d=%08" PRIx32 "!\n",
              reg, ctx_qemu.x[reg], reg, ctx->x[reg]);
       ret = 1;
@@ -223,7 +183,6 @@ int qcheck(rv_ctx *ctx) {
     }
   }
   if (ret) {
-    // 0x1ffff40        3
     printf("%-15s%-8s\t%-8s\t   %-15s\n", "", "QEMU reg value", "",
            "Our reg value");
     for (int i = 1; i < RV_REGS; i++) {
@@ -235,13 +194,7 @@ int qcheck(rv_ctx *ctx) {
       printf("\n");
     }
     printf("%-15s0x%-8" PRIx32 "\n", "pc", ctx->pc);
-  } else {
-    // printf("Our regs\n");
-    // rv_print_regs(ctx);
   }
-  // write(pipe_to_gdb[1], "disp\n", 5);
-  // if (wait_for(pipe_from_gdb[0], "(gdb)", "~\"=> ", 0, 0))
-  //   return 1;
   write(pipe_to_gdb[1], "si\n", 3);
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
     return 1;
@@ -309,32 +262,22 @@ int elf_load(char *fname, uint32_t *entry) {
   if (ek != ELF_K_ELF) {
     return 1;
   }
-  // printf("elf kind=%s\n", ek == ELF_K_ELF ? "ELF" : "??");
   if (!elf32_getehdr(e)) {
     return 1;
   }
   Elf32_Ehdr *hdr = elf32_getehdr(e);
-  // printf("hdr32=%p\n", hdr);
-  // printf("entry=%08" PRIx32 "\n", hdr->e_entry);
   if (entry) {
     *entry = hdr->e_entry;
   }
   size_t nph;
   elf_getphdrnum(e, &nph);
-  // printf("%d program headers\n", (int)nph);
   Elf32_Phdr *ph = elf32_getphdr(e);
   for (size_t i = 0; i < nph; i++) {
-    // printf(" of=%" PRIx32, ph[i].p_offset);
-    // printf(" pa=%" PRIx32, ph[i].p_paddr);
-    // printf(" va=%" PRIx32, ph[i].p_vaddr);
-    // printf(" fs=%" PRIx32, ph[i].p_filesz);
-    // printf(" ms=%" PRIx32, ph[i].p_memsz);
     Elf_Data *d =
         elf_getdata_rawchunk(e, ph[i].p_offset, ph[i].p_filesz, ELF_T_PHDR);
-    // printf(" %08" PRIx64, *(uint64_t *)d);
     uint32_t *p = *(uint32_t **)d;
-    printf(" Program#%zd: %08" PRIx32, i, *p);
-    printf("\n");
+    // printf(" Program#%zd: %08" PRIx32, i, *p);
+    // printf("\n");
     char *zero = calloc(1, ph[i].p_memsz);
     rv_write(zero, ph[i].p_vaddr, ph[i].p_memsz);
     free(zero);
@@ -372,7 +315,7 @@ static int rv_ecall(rv_ctx *ctx) {
     log_printf(1, "write a1=%" PRIx32 " a2=%" PRIx32 " \\\n", ctx->a1, ctx->a2);
     char *buf = calloc(ctx->a2 + 1, 1);
     ctx->read(buf, ctx->a1, ctx->a2);
-    printf("%s", buf);
+    ctx->a0 = printf("%s", buf);
     free(buf);
     break;
   }
@@ -389,28 +332,21 @@ static int rv_ecall(rv_ctx *ctx) {
     typedef struct rv_timespec {
       uint64_t tv_sec, tv_nsec;
     } rv_timespec_t;
-    // };
     typedef struct rv_stat {
-      rv_dev_t st_dev;         /* ID of device containing file */
-      rv_ino_t st_ino;         /* Inode number */
-      rv_mode_t st_mode;       /* File type and mode */
-      rv_nlink_t st_nlink;     /* Number of hard links */
-      rv_uid_t st_uid;         /* User ID of owner */
-      rv_gid_t st_gid;         /* Group ID of owner */
-      rv_dev_t st_rdev;        /* Device ID (if special file) */
-      rv_off_t st_size;        /* Total size, in bytes */
-      rv_blksize_t st_blksize; /* Block size for filesystem I/O */
-      rv_blkcnt_t st_blocks;   /* Number of 512B blocks allocated */
-
-      /* Since Linux 2.6, the kernel supports nanosecond
-         precision for the following timestamp fields.
-         For the details before Linux 2.6, see NOTES. */
-
+      rv_dev_t st_dev;            /* ID of device containing file */
+      rv_ino_t st_ino;            /* Inode number */
+      rv_mode_t st_mode;          /* File type and mode */
+      rv_nlink_t st_nlink;        /* Number of hard links */
+      rv_uid_t st_uid;            /* User ID of owner */
+      rv_gid_t st_gid;            /* Group ID of owner */
+      rv_dev_t st_rdev;           /* Device ID (if special file) */
+      rv_off_t st_size;           /* Total size, in bytes */
+      rv_blksize_t st_blksize;    /* Block size for filesystem I/O */
+      rv_blkcnt_t st_blocks;      /* Number of 512B blocks allocated */
       rv_timespec_t st_atim;      /* Time of last access */
       struct rv_timespec st_mtim; /* Time of last modification */
       struct rv_timespec st_ctim; /* Time of last status change */
-
-#define st_atime st_atim.tv_sec /* Backward compatibility */
+#define st_atime st_atim.tv_sec   /* Backward compatibility */
 #define st_mtime st_mtim.tv_sec
 #define st_ctime st_ctim.tv_sec
     } rv_stat_t;
@@ -536,9 +472,11 @@ int main(int argc, char *argv[]) {
       count++;
     }
     if (rv_execute(ctx)) {
-      // printf("RV execution stopped\n");
       break;
     }
+  }
+  if (do_qcheck) {
+    printf("[qcheck PASSED]\n");
   }
   if (!strcmp("em_esw", fin)) {
     int val = rv_read32(0x2008);
@@ -546,5 +484,6 @@ int main(int argc, char *argv[]) {
   } else {
     printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx->a0);
   }
+  rv_destroy(ctx);
   return 0;
 }
