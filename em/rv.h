@@ -150,6 +150,7 @@ int rv_set_log(rv_ctx *ctx, int log);
 int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write,
             rv_ebreak_cb rv_ebreak, rv_ecall_cb rv_ecall);
 rv_ctx *rv_create(int api, rv_ctx_init init);
+void rv_destroy(rv_ctx *ctx);
 int rv_execute(rv_ctx *ctx);
 void rv_print_regs(rv_ctx *ctx);
 char *rv_rname(uint8_t reg);

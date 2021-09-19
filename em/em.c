@@ -498,19 +498,23 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-  rv_ctx ctx;
-  rv_set_log(&ctx, log);
-  rv_init(&ctx, rv_read, rv_write, rv_ebreak, rv_ecall);
-  ctx.sp = start_sp;
-  ctx.pc = start_pc;
+  rv_ctx_init init = {.read = rv_read,
+                      .write = rv_write,
+                      .ebreak = rv_ebreak,
+                      .ecall = rv_ecall};
+  rv_ctx *ctx = rv_create(RV_API, init);
+  rv_set_log(ctx, log);
+
+  ctx->sp = start_sp;
+  ctx->pc = start_pc;
 
   // TODO: Fill the stack with user asrgs/env
   // until we get same final SP and stack contents as in qemu
-  ctx.sp = 0x1ffff40;
-  rv_write32(ctx.sp, 1);
+  ctx->sp = 0x1ffff40;
+  rv_write32(ctx->sp, 1);
 
   if (do_qcheck) {
-    if (qinit(&ctx)) {
+    if (qinit(ctx)) {
       printf("[qinit failed]\n");
       return 1;
     }
@@ -525,13 +529,13 @@ int main(int argc, char *argv[]) {
   while (1) {
     if (do_qcheck) {
       static int count = 0;
-      if (qcheck(&ctx)) {
+      if (qcheck(ctx)) {
         printf("[qcheck #%d failed]\n", count);
         return 1;
       }
       count++;
     }
-    if (rv_execute(&ctx)) {
+    if (rv_execute(ctx)) {
       // printf("RV execution stopped\n");
       break;
     }
@@ -540,7 +544,7 @@ int main(int argc, char *argv[]) {
     int val = rv_read32(0x2008);
     printf("[Memory state at finish : %d (should be -5)]\n", val);
   } else {
-    printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx.a0);
+    printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx->a0);
   }
   return 0;
 }
