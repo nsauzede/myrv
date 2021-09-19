@@ -86,7 +86,7 @@ int qinit(rv_ctx *ctx) {
     char *newargv[] = {"qemu-riscv32", "-g",  "1234", "-R",
                        "0x2000000",    "esw", NULL};
     char *newenviron[] = {NULL};
-
+    // we execvpe because we want to specify an empty environment
     execvpe(newargv[0], newargv, newenviron);
     perror("execvpe"); /* execvpe() returns only on error */
     exit(EXIT_FAILURE);
@@ -150,20 +150,14 @@ int qcheck(rv_ctx *ctx) {
         break;
       uint32_t val = 0;
       sscanf(next + 17, "%" SCNx32, &val);
-      if (reg == 32) {
-        ctx_qemu.pc = val;
-      } else if (reg < 32) {
+      if (reg <= RV_REGS) {
         ctx_qemu.x[reg] = val;
       }
-      if (ret)
-        break;
       reg++;
       str = strchr(next, '\t');
       if (!str)
         break;
     }
-    if (ret)
-      break;
     if (strstr(buf, "(gdb)"))
       break;
   }
@@ -175,25 +169,17 @@ int qcheck(rv_ctx *ctx) {
       break;
     }
   }
-  if (!ret) {
-    if (ctx_qemu.pc != ctx->pc) {
-      printf("QEMU PC=%08" PRIx32 " DIFFERENT from our PC=%08" PRIx32 "!\n",
-             ctx_qemu.pc, ctx->pc);
-      ret = 1;
-    }
-  }
   if (ret) {
-    printf("%-15s%-8s\t%-8s\t   %-15s\n", "", "QEMU reg value", "",
+    printf("%-8s%-8s\t%-12s   %-8s%-8s\n", "", "QEMU reg value", "", "",
            "Our reg value");
     for (int i = 1; i < RV_REGS; i++) {
-      printf("%-15s0x%-8" PRIx32 "\t%-8" PRId32, rv_rname(i), ctx_qemu.x[i],
+      printf("%-8s0x%-8" PRIx32 "\t%-12" PRId32, rv_rname(i), ctx_qemu.x[i],
              ctx_qemu.x[i]);
-      printf("\t%-3s", ctx_qemu.x[i] != ctx->x[i] ? "**" : "");
-      printf("%-15s0x%-8" PRIx32 "\t%-8" PRId32, rv_rname(i), ctx->x[i],
+      printf("%-3s", ctx_qemu.x[i] != ctx->x[i] ? "**" : "");
+      printf("%-8s0x%-8" PRIx32 "\t%-12" PRId32, rv_rname(i), ctx->x[i],
              ctx->x[i]);
       printf("\n");
     }
-    printf("%-15s0x%-8" PRIx32 "\n", "pc", ctx->pc);
   }
   write(pipe_to_gdb[1], "si\n", 3);
   if (wait_for(pipe_from_gdb[0], "(gdb)", 0, 0, 0))
@@ -276,8 +262,6 @@ int elf_load(char *fname, uint32_t *entry) {
     Elf_Data *d =
         elf_getdata_rawchunk(e, ph[i].p_offset, ph[i].p_filesz, ELF_T_PHDR);
     uint32_t *p = *(uint32_t **)d;
-    // printf(" Program#%zd: %08" PRIx32, i, *p);
-    // printf("\n");
     char *zero = calloc(1, ph[i].p_memsz);
     rv_write(zero, ph[i].p_vaddr, ph[i].p_memsz);
     free(zero);

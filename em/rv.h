@@ -2,7 +2,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define RV_REGS 32
+// We add to the end of general regs to match with gdb output
+// and ease of coding
+#define RV_REGS (32 + 1)
 
 #define RV32M
 
@@ -140,10 +142,9 @@ typedef struct rv_ctx {
     uint32_t x[RV_REGS];
     struct {
       uint32_t zero, ra, sp, gp, tp, t0, t1, t2, s0, s1, a0, a1, a2, a3, a4, a5,
-          a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6;
+          a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6, pc;
     };
   };
-  uint32_t pc;
 } rv_ctx;
 
 int rv_set_log(rv_ctx *ctx, int log);
