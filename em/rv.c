@@ -43,32 +43,43 @@ void rv_print_insn(rv_ctx *ctx) {
   printf("opc=%" PRIx8 "\n", i.r.opc);
 }
 
+static uint8_t rv_read8(rv_ctx *ctx, uint32_t addr) {
+  uint8_t val = 0;
+  ctx->read(&val, addr, sizeof(val));
+  return val;
+}
+
 static uint16_t rv_read16(rv_ctx *ctx, uint32_t addr) {
   uint16_t val = 0;
   ctx->read(&val, addr, sizeof(val));
   return val;
 }
 
-static uint16_t rv_write16(rv_ctx *ctx, uint32_t addr, uint16_t val) {
+static uint32_t rv_read32(rv_ctx *ctx, uint32_t addr) {
+  uint32_t val = 0;
+  ctx->read(&val, addr, sizeof(val));
+  return val;
+}
+
+static uint32_t rv_write8(rv_ctx *ctx, uint32_t addr, uint8_t val) {
   return ctx->write(&val, addr, sizeof(val));
 }
 
-static uint16_t rv_write8(rv_ctx *ctx, uint32_t addr, uint8_t val) {
+static uint32_t rv_write16(rv_ctx *ctx, uint32_t addr, uint16_t val) {
   return ctx->write(&val, addr, sizeof(val));
 }
 
-int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write,
-            rv_read8_cb rv_read8, rv_read32_cb rv_read32,
-            rv_write32_cb rv_write32) {
-  if (!ctx || !rv_read || !rv_write || !rv_read8 || !rv_read32 || !rv_write32) {
+static uint32_t rv_write32(rv_ctx *ctx, uint32_t addr, uint32_t val) {
+  return ctx->write(&val, addr, sizeof(val));
+}
+
+int rv_init(rv_ctx *ctx, rv_read_cb rv_read, rv_write_cb rv_write) {
+  if (!ctx || !rv_read || !rv_write) {
     return 1;
   }
   memset(ctx, 0, sizeof(*ctx));
   ctx->read = rv_read;
   ctx->write = rv_write;
-  ctx->read32 = rv_read32;
-  ctx->read8 = rv_read8;
-  ctx->write32 = rv_write32;
   return 0;
 }
 
@@ -77,7 +88,7 @@ int rv_fetch(rv_ctx *ctx) {
     die();
     return 1;
   }
-  ctx->last_insn = ctx->read32(ctx->pc);
+  ctx->last_insn = rv_read32(ctx, ctx->pc);
   ctx->pc += 4;
   return 0;
 }
@@ -383,7 +394,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "LW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), imm);
       if (i.r.rd)
-        ctx->x[i.i.rd] = ctx->read32(ctx->x[i.r.rs1] + rv_signext(imm, 11));
+        ctx->x[i.i.rd] = rv_read32(ctx, ctx->x[i.r.rs1] + rv_signext(imm, 11));
       break;
     }
     case RV_LBU: {
@@ -391,7 +402,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "LW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), imm);
       if (i.r.rd)
-        ctx->x[i.i.rd] = ctx->read8(ctx->x[i.r.rs1] + rv_signext(imm, 11));
+        ctx->x[i.i.rd] = rv_read8(ctx, ctx->x[i.r.rs1] + rv_signext(imm, 11));
       break;
     }
     default:
@@ -503,7 +514,7 @@ int rv_execute(rv_ctx *ctx) {
       uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
       log_printf(1, "SB rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
                  rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
-      // uint32_t addr=ctx->read32(ctx->x[i.r.rs1] + imm);
+      // uint32_t addr=rv_read32(ctx, ctx->x[i.r.rs1] + imm);
       rv_write8(ctx, ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
       break;
     }
@@ -511,7 +522,7 @@ int rv_execute(rv_ctx *ctx) {
       uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
       log_printf(1, "SH rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
                  rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
-      // uint32_t addr=ctx->read32(ctx->x[i.r.rs1] + imm);
+      // uint32_t addr=rv_read32(ctx, ctx->x[i.r.rs1] + imm);
       rv_write16(ctx, ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
       break;
     }
@@ -519,8 +530,8 @@ int rv_execute(rv_ctx *ctx) {
       uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
       log_printf(1, "SW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
                  rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
-      // uint32_t addr=ctx->read32(ctx->x[i.r.rs1] + imm);
-      ctx->write32(ctx->x[i.s.rs1] + rv_signext(imm, 11), ctx->x[i.s.rs2]);
+      // uint32_t addr=rv_read32(ctx, ctx->x[i.r.rs1] + imm);
+      rv_write32(ctx, ctx->x[i.s.rs1] + rv_signext(imm, 11), ctx->x[i.s.rs2]);
       break;
     }
     default:
@@ -626,9 +637,8 @@ int rv_execute(rv_ctx *ctx) {
           st.st_blksize = 0x400;
           st.st_blocks = 0x0;
           ctx->write(&st, ctx->a1, sizeof(st));
-          log_printf(1, "fstat a1=%" PRIx32 "\n", ctx->a1);
-          printf("NOTIMP fstat a0=%" PRIx32 " a1=%" PRIx32 "\n", ctx->a0,
-                 ctx->a1);
+          log_printf(1, "FIXME fstat a0=%" PRIx32 " a1=%" PRIx32 "\n", ctx->a0,
+                     ctx->a1);
           // return 1;
           break;
         }

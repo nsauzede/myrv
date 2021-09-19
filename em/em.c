@@ -280,9 +280,7 @@ uint32_t rv_write(const void *src, uint32_t addr, uint32_t size) {
 
 uint8_t rv_read8(uint32_t addr) {
   uint8_t val = 0;
-  if ((addr >= mem_start) && (addr + 1 <= mem_start + mem_len)) {
-    memcpy(&val, mem + addr - mem_start, 1);
-  }
+  rv_read(&val, addr, sizeof(val));
   return val;
 }
 
@@ -405,7 +403,7 @@ int main(int argc, char *argv[]) {
 
   rv_ctx ctx;
   rv_set_log(&ctx, log);
-  rv_init(&ctx, rv_read, rv_write, rv_read8, rv_read32, rv_write32);
+  rv_init(&ctx, rv_read, rv_write);
   ctx.sp = start_sp;
   ctx.pc = start_pc;
 
