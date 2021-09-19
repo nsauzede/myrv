@@ -32,6 +32,11 @@ riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
 [Memory state at finish : -5 (should be -5)]
 ```
 ## Compare emulation with qemu+gdb
+A nifty trick is used to compare 100% emulation accuracy with qemu-riscv32 at register-level.
+The principle is to fork+execve in parallel an `qemu-riscv32` instance on the same esw waiting for gdb connection,
+and then to fork+execve in parallel an `riscv32-unknown-elf-gdb` that connects to qemu.
+Then our emulation single-steps the esw execution, comparing all registers with qemu's instance, reporting detailed diff.
+
 Following example shows effect of `SW` emulation discrepancy between this impl and QEMU: the immediate offset sign was not correctly extended, leading to a register difference when `LW` loaded back with a correct immediate offset sign extension.
 ```
 $ make clean all && ./em esw -q
