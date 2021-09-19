@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 #ifdef __riscv
 #define EBREAK asm volatile("ebreak")
 
@@ -28,8 +28,9 @@ int foo(int a, int b) {
 #else
 #define GREETING "Hello world\n"
 #endif
-  // write(1, GREETING, 12);
-  // printf("hello printf\n");
+  write(1, GREETING, 12);
+  // puts("hello puts\n");
+  // printf("hello %s\n", "printf");
   return a + b;
   // return -5;
 }

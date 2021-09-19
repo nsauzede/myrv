@@ -29,6 +29,7 @@ typedef enum {
   RV_AND = 0x7,
   // OP-IMM
   RV_ADDI = 0x0,
+  RV_SLTIU = 0x3,
   RV_ORI = 0x6,
   RV_ANDI = 0x7,
   // SHIFT
