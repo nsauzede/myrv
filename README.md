@@ -6,7 +6,7 @@ Basically a simple RV32IM emulator written from scratch (along with small test E
 - [RV32I cheat sheet](https://metalcode.eu/2019-12-06-rv32i.html)
 - [RV home](https://riscv.org/technical/specifications/)
 
-Uses instrumented RISCV32 QEMU+GDB combination, to check for 100% accuracy.
+Uses instrumented RISCV32 QEMU+GDB combination, to check for 100% accuracy, without looking at qemu's riscv actual implementation..
 
 ![myrv screenshot](myrv.png)
 
