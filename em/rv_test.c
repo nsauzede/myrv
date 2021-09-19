@@ -89,11 +89,11 @@ static uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
 
 static int rv_test() {
   // test bad input params
-  assert(1 == rv_init(0, 0, 0, 0));
+  assert(1 == rv_init(0, 0, 0, 0, 0));
   assert(1 == rv_execute(0));
   // test good input params
   rv_ctx ctx;
-  assert(0 == rv_init(&ctx, rv_read, rv_write, 0));
+  assert(0 == rv_init(&ctx, rv_read, rv_write, 0, 0));
   assert(0 == ctx.pc); // test initial PC
   assert(0 == ctx.a0); // test initial a0
   assert(0 == ctx.a5); // test initial a5
