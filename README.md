@@ -6,6 +6,8 @@ Basically a simple RV32I emulator written from scratch (along with small test ES
 - [RV32I cheat sheet](https://metalcode.eu/2019-12-06-rv32i.html)
 - [RV home](https://riscv.org/technical/specifications/)
 
+Uses instrumented RISCV Qemu-user+GDB combination, to compare each emulated instruction and find divergence.
+
 ![myrv screenshot](myrv.png)
 
 ## Prerequisites
@@ -19,11 +21,12 @@ In order to build native RISC-V esw, you must have a riscv toolchain available i
 ```
 $ cd em
 $ make clean test
-rm -f *.o *.bin rv_test em esw elf
+rm -f *.o *.bin rv_test em em_esw esw elf qcheck
 cc -Wall -Werror -g -O0 -o em em.c rv.c -lelf
-riscv32-unknown-elf-gcc esw.c -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
-./em esw
+riscv32-unknown-elf-as -o em_esw.o em_esw.s
+riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
+./em em_esw 
+ Program#0: 464c457f
 [Loaded ELF]
-Hello riscv
 [Memory state at finish : -5 (should be -5)]
 ```
