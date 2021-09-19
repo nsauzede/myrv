@@ -20,16 +20,17 @@ In order to build native RISC-V esw, you must have a riscv toolchain available i
 ## Test it!
 ```
 $ cd em
-$ make clean test
+$ make clean all && ./em  esw -q
 rm -f *.o *.bin rv_test em em_esw esw elf qcheck
+cc -Wall -Werror -g -O0 -o rv_test rv_test.c rv.c
 cc -Wall -Werror -g -O0 -o em em.c rv.c -lelf
+riscv32-unknown-elf-gcc esw.c -g -O0 -fsigned-char -Ttext=0 -o esw
 riscv32-unknown-elf-as -o em_esw.o em_esw.s
 riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
-./em em_esw 
- Program#0: 464c457f
+ Program#0: 00000793
+ Program#1: 00000000
 [Loaded ELF]
-[Setting input params at 0x2000: -2 and -3 (will be added as a result))]
-[Memory state at finish : -5 (should be -5)]
+[A0 reg at finish : -5 (should be -5)]
 ```
 ## Compare emulation with qemu+gdb
 A nifty trick is used to compare 100% emulation accuracy with qemu-riscv32 at register-level.
