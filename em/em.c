@@ -421,12 +421,12 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // if (!do_qcheck) {
-  //   printf("[Setting input params at 0x2000: -2 and -3 (will be added as a "
-  //          "result))]\n");
-  //   rv_write32(0x2000, -2);
-  //   rv_write32(0x2004, -3);
-  // }
+  if (!strcmp("em_esw", fin)) {
+    printf("[Setting input params at 0x2000: -2 and -3 (will be added as a "
+           "result))]\n");
+    rv_write32(0x2000, -2);
+    rv_write32(0x2004, -3);
+  }
   while (1) {
     if (do_qcheck) {
       static int count = 0;
@@ -441,13 +441,11 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-  // if (do_qcheck){
-  printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx.a0);
-  // }
-  // else
-  // {
-  //   int val = rv_read32(0x2008);
-  //   printf("[Memory state at finish : %d (should be -5)]\n", val);
-  // }
+  if (!strcmp("em_esw", fin)) {
+    int val = rv_read32(0x2008);
+    printf("[Memory state at finish : %d (should be -5)]\n", val);
+  } else {
+    printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx.a0);
+  }
   return 0;
 }
