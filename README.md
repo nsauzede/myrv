@@ -32,6 +32,7 @@ riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
 [Memory state at finish : -5 (should be -5)]
 ```
 ## Compare emulation with qemu+gdb
+Following example shows effect of `SW` emulation discrepancy between this impl and QEMU: the immediate offset sign was not correctly extended, leading to a register difference when `LW` loaded back with a correct immediate offset sign extension.
 ```
 $ make clean all && ./em esw -q
  Program#0: 00000793
