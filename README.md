@@ -31,3 +31,52 @@ riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
 [Setting input params at 0x2000: -2 and -3 (will be added as a result))]
 [Memory state at finish : -5 (should be -5)]
 ```
+## Compare emulation with qemu+gdb
+```
+$ make clean all && ./em esw -q
+ Program#0: 00000793
+ Program#1: 00000000
+[Loaded ELF]
+{qpid is 41774}
+{gpid is 41775}
+{Done}
+[qcheck #0]
+...
+[qcheck #142]
+QEMU x14=fffffffe DIFFERENT from our x14=00000000!
+               QEMU reg value                           Our reg value  
+ra             0x194            404                     0x194           404     
+sp             0x1ffff10        33554192                0x1ffff10       33554192
+gp             0x1dc8           7624                    0x1dc8          7624    
+tp             0x0              0                       0x0             0       
+t0             0x2c4            708                     0x2c4           708     
+t1             0xf              15                      0xf             15      
+t2             0x0              0                       0x0             0       
+s0             0x1ffff30        33554224                0x1ffff30       33554224
+s1             0x0              0                       0x0             0       
+a0             0xfffffffe       -2                      0xfffffffe      -2      
+a1             0xfffffffd       -3                      0xfffffffd      -3      
+a2             0x0              0                       0x0             0       
+a3             0x0              0                       0x0             0       
+a4             0xfffffffe       -2              ***     0x0             0       
+a5             0x0              0                       0x0             0       
+a6             0x0              0                       0x0             0       
+a7             0x0              0                       0x0             0       
+s2             0x0              0                       0x0             0       
+s3             0x0              0                       0x0             0       
+s4             0x0              0                       0x0             0       
+s5             0x0              0                       0x0             0       
+s6             0x0              0                       0x0             0       
+s7             0x0              0                       0x0             0       
+s8             0x0              0                       0x0             0       
+s9             0x0              0                       0x0             0       
+s10            0x0              0                       0x0             0       
+s11            0x0              0                       0x0             0       
+t3             0x0              0                       0x0             0       
+t4             0x0              0                       0x0             0       
+t5             0x0              0                       0x0             0       
+t6             0x0              0                       0x0             0       
+pc             0x160     
+~"0x00000164\t33\t  return a + b;\n"
+[qcheck #142 failed]
+```
