@@ -1,15 +1,43 @@
 TARGET:=rv_test
 TARGET+=em
+TARGET+=em_esw.bin
+
+_SYS := $(shell uname 2>/dev/null || echo Unknown)
+_SYS := $(patsubst MSYS%,MSYS,$(_SYS))
+_SYS := $(patsubst MINGW%,MinGW,$(_SYS))
+ifneq ($(filter $(_SYS),MSYS MinGW),)
+WIN32 := 1
+endif
+
+ifndef WIN32
+HAVE_ELF:=1
+HAVE_QCHECK:=1
+endif
+
+ifdef HAVE_ELF
 TARGET+=esw
 TARGET+=em_esw
-#TARGET+=em_esw.bin
+endif
+
+ifdef HAVE_ELF
+CFLAGS+=-DHAVE_ELF
+TARGET+=esw
+TARGET+=em_esw
+endif
 
 CFLAGS:=-Wall -Werror
 CFLAGS+=-g -O0
 
+ifdef HAVE_ELF
+CFLAGS+=-DHAVE_ELF
+endif
+
+ifdef HAVE_QCHECK
+CFLAGS+=-DHAVE_QCHECK
+endif
+
 all: $(TARGET)
 
-HAVE_ELF:=1
 ifdef HAVE_ELF
 em:LDLIBS+=-lelf
 endif
@@ -23,8 +51,8 @@ endif
 # test: em esw
 # 	./em esw $(VERBOSE)
 
-test: em esw
-	./em esw $(VERBOSE)
+test: em
+	./em $(VERBOSE)
 
 check: rv_test
 	./rv_test

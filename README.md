@@ -23,6 +23,10 @@ Also the emulator uses ELF files, so the libelf dev package must be available
 Optionally, to use the qemu+gdb feature described below, the Qemu User RISCV tool must be installed
 - `sudo apt install qemu-user`
 
+Note that currently, ELF and qem+gdb support works only on Linux.
+It can be disbaled like this:
+- `make clean all check test HAVE_ELF= HAVE_QCHECK=`
+
 ## Test it!
 ```
 $ cd em

@@ -10,7 +10,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define HAVE_ELF
 #ifdef HAVE_ELF
 #include <libelf.h>
 #endif
@@ -21,6 +20,7 @@ uint32_t mem_start = 0;
 uint32_t mem_len = 0x2000000;
 unsigned char *mem = 0;
 
+#ifdef HAVE_QCHECK
 int do_qcheck = 0;
 
 int get_line(int fd, char *buf, size_t size) {
@@ -200,6 +200,7 @@ int qcleanup(rv_ctx *ctx) {
     return 1;
   return 0;
 }
+#endif
 
 uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
   uint32_t ret = 0;
@@ -367,16 +368,22 @@ static int rv_ecall(rv_ctx *ctx) {
 int main(int argc, char *argv[]) {
   uint32_t start_pc = mem_start;
   uint32_t start_sp = mem_len;
+#ifdef HAVE_ELF
   char *fin = "esw";
+#else
+  char *fin = "em_esw.bin";
+#endif
   int log = 0;
   int pos = 0;
   int arg = 1;
   while (arg < argc) {
+#ifdef HAVE_QCHECK
     if (!strcmp(argv[arg], "-q")) {
       arg++;
       do_qcheck = 1;
       continue;
     }
+#endif
     if (!strcmp(argv[arg], "-v")) {
       arg++;
       log++;
@@ -411,6 +418,10 @@ int main(int argc, char *argv[]) {
   } else {
 #endif
     FILE *in = fopen(fin, "rb");
+    if (!in) {
+      printf("Failed to open %s\n", fin);
+      exit(1);
+    }
     fread(mem, mem_len, 1, in);
     fclose(in);
     printf("[Loaded flat binary]\n");
@@ -433,20 +444,23 @@ int main(int argc, char *argv[]) {
   ctx->sp = 0x1ffff40;
   rv_write32(ctx->sp, 1);
 
+#ifdef HAVE_QCHECK
   if (do_qcheck) {
     if (qinit(ctx)) {
       printf("[qinit failed]\n");
       return 1;
     }
   }
+#endif
 
-  if (!strcmp("em_esw", fin)) {
+  if (!strcmp("em_esw", fin) || !strcmp("em_esw.bin", fin)) {
     printf("[Setting input params at 0x2000: -2 and -3 (will be added as a "
            "result))]\n");
     rv_write32(0x2000, -2);
     rv_write32(0x2004, -3);
   }
   while (1) {
+#ifdef HAVE_QCHECK
     if (do_qcheck) {
       static int count = 0;
       if (qcheck(ctx)) {
@@ -455,17 +469,20 @@ int main(int argc, char *argv[]) {
       }
       count++;
     }
+#endif
     if (rv_execute(ctx)) {
       break;
     }
   }
+#ifdef HAVE_QCHECK
   if (do_qcheck) {
     printf("[qcheck PASSED]\n");
   }
-  if (!strcmp("em_esw", fin)) {
+#endif
+  if (!strcmp("em_esw", fin) || !strcmp("em_esw.bin", fin)) {
     int val = rv_read32(0x2008);
     printf("[Memory state at finish : %d (should be -5)]\n", val);
-  } else {
+  } else if (!strcmp("esw", fin)) {
     printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx->a0);
   }
   rv_destroy(ctx);
