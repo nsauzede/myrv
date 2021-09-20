@@ -414,7 +414,7 @@ int main(int argc, char *argv[]) {
   mem = calloc(mem_len, 1);
 #ifdef HAVE_ELF
   if (!elf_load(fin, &start_pc)) {
-    printf("[Loaded ELF]\n");
+    printf("[Loaded ELF %s]\n", fin);
   } else {
 #endif
     FILE *in = fopen(fin, "rb");
@@ -424,7 +424,7 @@ int main(int argc, char *argv[]) {
     }
     fread(mem, mem_len, 1, in);
     fclose(in);
-    printf("[Loaded flat binary]\n");
+    printf("[Loaded flat binary %s]\n", fin);
 #ifdef HAVE_ELF
   }
 #endif
