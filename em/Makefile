@@ -60,7 +60,7 @@ check: rv_test
 rv_test: rv_test.c rv.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-em: em.c rv.c
+em: em.c em_sys.c rv.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 esw: esw.c

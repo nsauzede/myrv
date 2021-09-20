@@ -49,7 +49,7 @@ int foo(int a, int b) {
   // return sizeof(st.st_mtim); // 16
   // return sizeof(st.st_ctim); // 16
   // return sizeof(st.st_atim.tv_sec); // 8
-  // fstat(0, &st);
+  fstat(0, &st);
   // return st.st_dev;
 #else
   // return sizeof(st.st_dev); // 8

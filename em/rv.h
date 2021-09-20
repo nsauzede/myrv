@@ -1,3 +1,6 @@
+#ifndef RV_H__
+#define RV_H__
+
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -153,3 +156,5 @@ int rv_destroy(rv_ctx *ctx);
 int rv_execute(rv_ctx *ctx);
 void rv_print_regs(rv_ctx *ctx);
 char *rv_rname(uint8_t reg);
+
+#endif /*RV_H__*/
