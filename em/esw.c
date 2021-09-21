@@ -34,6 +34,7 @@ int foo(int a, int b) {
 #endif
   write(1, GREETING, 12);
   struct stat st;
+  memset(&st, 0, sizeof(st));
 #ifdef __riscv
   // return sizeof(st.st_dev); // 2
   // return sizeof(st.st_ino);//2
@@ -49,8 +50,23 @@ int foo(int a, int b) {
   // return sizeof(st.st_mtim); // 16
   // return sizeof(st.st_ctim); // 16
   // return sizeof(st.st_atim.tv_sec); // 8
-  fstat(0, &st);
-  // return st.st_dev;
+  // fstat(0, &st);
+  // return st.st_dev; // 24
+  // return st.st_ino; // 6
+  // return st.st_mode; // 144
+  // return st.st_nlink; // 1
+  // return st.st_uid; // 232
+  // return st.st_gid; // 5
+  // return st.st_rdev; // 3
+  // return st.st_size; // 0
+  // return st.st_blksize; // 0
+  // return st.st_blocks; // 0
+  // return st.st_atim.tv_sec; // 106
+  // return st.st_atim.tv_nsec; // 0
+  // return st.st_mtim.tv_sec; // 227
+  // return st.st_mtim.tv_nsec; // 0
+  // return st.st_ctim.tv_sec; // 0
+  // return st.st_ctim.tv_nsec; // 0
 #else
   // return sizeof(st.st_dev); // 8
   // return sizeof(st.st_ino);//8
@@ -77,7 +93,7 @@ int foo(int a, int b) {
   printf("atim.sec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_sec);
   printf("atim.nsec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_nsec);
 #endif
-  // puts("hello puts\n");
+  puts("hello puts\n");
   // printf("hello %s\n", "printf");
   return a + b;
   // return -5;
