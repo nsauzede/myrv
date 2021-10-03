@@ -70,6 +70,7 @@ int em_ecall(rv_ctx *ctx) {
     } rv_stat_t;
     rv_stat_t st;
     memset(&st, 0, sizeof(st));
+    int ret = 0;
 #if 0
     st.st_dev = 0x18;
     st.st_ino = 0x4;
@@ -81,9 +82,9 @@ int em_ecall(rv_ctx *ctx) {
     st.st_size = 0x0;
     st.st_blksize = 0x400;
     st.st_blocks = 0x0;
-#elif 1
+#elif 0
     struct stat hst;
-    fstat(ctx->a0, &hst);
+    ret = fstat(ctx->a0, &hst);
     st.st_dev = hst.st_dev;
     st.st_ino = hst.st_ino;
     st.st_mode = hst.st_mode;
@@ -96,6 +97,7 @@ int em_ecall(rv_ctx *ctx) {
     st.st_blocks = hst.st_blocks;
 #endif
     ctx->write(&st, ctx->a1, sizeof(st));
+    ctx->a0 = ret;
     // return 1;
     break;
   }
@@ -104,7 +106,13 @@ int em_ecall(rv_ctx *ctx) {
     return 1;
     break;
   }
+  case 214: {
+    log_printf(1, "FIXME sbrk a0=%" PRIx32 " a1=%" PRIx32 "\n", ctx->a0,
+               ctx->a1);
+    break;
+  }
   default:
+    log_printf(1, "unimplemented a7=%" PRIu32 "\n", ctx->a7);
     die();
     return 1;
   }

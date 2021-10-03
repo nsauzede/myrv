@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -79,7 +80,22 @@ int foo(int a, int b) {
 
   // return sizeof(st.st_atim);//16
   // return sizeof(st);//144
-#ifndef __riscv
+#ifdef __riscv
+#if 0
+  printf("dev=%" PRIx32 "\n", (uint32_t)st.st_dev);
+  printf("ino=%" PRIx32 "\n", (uint32_t)st.st_ino);
+  printf("mode=%" PRIx32 "\n", (uint32_t)st.st_mode);
+  printf("nlink=%" PRIx32 "\n", (uint32_t)st.st_nlink);
+  printf("uid=%" PRIx32 "\n", (uint32_t)st.st_uid);
+  printf("gid=%" PRIx32 "\n", (uint32_t)st.st_gid);
+  printf("rdev=%" PRIx32 "\n", (uint32_t)st.st_rdev);
+  printf("size=%" PRIx32 "\n", (uint32_t)st.st_size);
+  printf("blksize=%" PRIx32 "\n", (uint32_t)st.st_blksize);
+  printf("blocks=%" PRIx32 "\n", (uint32_t)st.st_blocks);
+  printf("atim.sec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_sec);
+  printf("atim.nsec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_nsec);
+#endif
+#else
   printf("dev=%" PRIx32 "\n", (uint32_t)st.st_dev);
   printf("ino=%" PRIx32 "\n", (uint32_t)st.st_ino);
   printf("mode=%" PRIx32 "\n", (uint32_t)st.st_mode);
