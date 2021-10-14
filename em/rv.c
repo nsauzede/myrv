@@ -203,6 +203,12 @@ int rv_execute(rv_ctx *ctx) {
         ctx->x[i.i.rd] =
             ctx->x[i.i.rs1] < (uint32_t)rv_signext(i.i.imm_11_0, 11) ? 1 : 0;
       break;
+    case RV_XORI:
+      log_printf(1, "XORI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
+                 rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
+      if (i.i.rd)
+        ctx->x[i.i.rd] = ctx->x[i.i.rs1] ^ rv_signext(i.i.imm_11_0, 11);
+      break;
     case RV_ORI:
       log_printf(1, "ORI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
