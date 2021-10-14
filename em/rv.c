@@ -118,6 +118,15 @@ void rv_print_regs(rv_ctx *ctx) {
   }
 }
 
+int64_t rv_signext64(int64_t val, int sbit) {
+  int64_t sign = 0;
+  int64_t mask = 1 << sbit;
+  if (val & mask) {
+    sign = -1 & ~(mask - 1);
+  }
+  return val | sign;
+}
+
 int32_t rv_signext(int32_t val, int sbit) {
   int32_t sign = 0;
   int32_t mask = 1 << sbit;
@@ -277,6 +286,21 @@ int rv_execute(rv_ctx *ctx) {
         if (i.r.rd)
           ctx->x[i.r.rd] = ctx->x[i.r.rs1] << (ctx->x[i.r.rs2] & 0x1f);
         break;
+#ifdef RV32M
+      case RV_MULH:
+        log_printf(1, "MULH rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+                   rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
+                   rv_rname(i.r.rs2));
+        if (i.r.rd) {
+//          int64_t rs1 = rv_signext64(ctx->x[i.r.rs1], 32);
+          int64_t rs2 = rv_signext64(ctx->x[i.r.rs2], 32);
+          int64_t rs1 = ctx->x[i.r.rs1];
+//          int64_t rs2 = ctx->x[i.r.rs2];
+          log_printf(1, "RS1=%" PRIx64 " RS2=%" PRIx64 "\n", rs1, rs2);
+          ctx->x[i.r.rd] = (rs1 * rs2) >> 32;
+        }
+        break;
+#endif
       default:
         die();
         return 1;

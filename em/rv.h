@@ -74,6 +74,7 @@ typedef enum {
   RV_SUB = 0x20,
 #ifdef RV32M
   RV_MUL = 0x01,
+  RV_MULH = 0x01,
   RV_MULHU = 0x01,
   RV_DIV = 0x01,
   RV_REM = 0x01,
