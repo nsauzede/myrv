@@ -31,7 +31,7 @@ int rv_set_log(rv_ctx *ctx, int log) {
 }
 
 void rv_print_insn(rv_ctx *ctx) {
-  printf("PC=%08" PRIx32 ": a4=%08" PRIx32 " ", ctx->pc, ctx->a4);
+  printf("PC 0x%08" PRIx32 " a4=%08" PRIx32 " ", ctx->pc, ctx->a4);
   rv_insn i;
   i.insn = ctx->last_insn;
   printf("0x%08" PRIx32 " ", i.insn);
@@ -147,7 +147,7 @@ int rv_execute(rv_ctx *ctx) {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
-    log_printf(1, "PC=%08" PRIx32 ": a4=%08" PRIx32 " ", ctx->pc - 4, ctx->a4);
+    log_printf(1, "PC 0x%08" PRIx32 " a4=%08" PRIx32 " ", ctx->pc - 4, ctx->a4);
   }
 
   switch (i.opc) {
@@ -528,6 +528,7 @@ int rv_execute(rv_ctx *ctx) {
     if (i.j.rd)
       ctx->x[i.j.rd] = ctx->pc;
     ctx->pc = ctx->pc - 4 + rv_signext(imm, 20);
+    log_printf(1, "JAL PC=%" PRIx32 "\n", ctx->pc);
     break;
   }
 
@@ -569,6 +570,7 @@ int rv_execute(rv_ctx *ctx) {
     }
     break;
   default:
+    printf("Unknown opc=%d\n", i.opc);
     die();
     return 1;
   }

@@ -71,7 +71,7 @@ static int pipe_to_qemu[2];
 static int pipe_from_qemu[2];
 static int pipe_fromerr_qemu[2];
 
-int qinit(rv_ctx *ctx) {
+int qinit(rv_ctx *ctx, char *esw) {
   pipe(pipe_to_qemu);
   pipe(pipe_from_qemu);
   pipe(pipe_fromerr_qemu);
@@ -86,7 +86,7 @@ int qinit(rv_ctx *ctx) {
     dup2(pipe_from_qemu[1], 1);
     dup2(pipe_fromerr_qemu[1], 2);
     char *newargv[] = {"qemu-riscv32", "-g",  "1234", "-R",
-                       "0x2000000",    "esw", NULL};
+                       "0x2000000",    esw, NULL};
     char *newenviron[] = {NULL};
     // we execvpe because we want to specify an empty environment
     execvpe(newargv[0], newargv, newenviron);
@@ -155,6 +155,7 @@ int qcheck(rv_ctx *ctx) {
       if (reg <= RV_REGS) {
         ctx_qemu.x[reg] = val;
       }
+      // printf("READ REG #%d = %" PRIx64 "\n", (int)reg, (uint64_t)val);
       reg++;
       str = strchr(next, '\t');
       if (!str)
@@ -281,9 +282,9 @@ int main(int argc, char *argv[]) {
   uint32_t start_pc = mem_start;
   uint32_t start_sp = mem_len;
 #ifdef HAVE_ELF
-  char *fin = "esw";
+  char *esw_fin = "esw";
 #else
-  char *fin = "em_esw.bin";
+  char *esw_fin = "em_esw.bin";
 #endif
   int log = 0;
   int pos = 0;
@@ -307,7 +308,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     if (pos == 0) {
-      fin = argv[arg++];
+      esw_fin = argv[arg++];
       pos++;
       continue;
     }
@@ -325,18 +326,18 @@ int main(int argc, char *argv[]) {
 
   mem = calloc(mem_len, 1);
 #ifdef HAVE_ELF
-  if (!elf_load(fin, &start_pc)) {
-    printf("[Loaded ELF %s]\n", fin);
+  if (!elf_load(esw_fin, &start_pc)) {
+    printf("[Loaded ELF %s]\n", esw_fin);
   } else {
 #endif
-    FILE *in = fopen(fin, "rb");
+    FILE *in = fopen(esw_fin, "rb");
     if (!in) {
-      printf("Failed to open %s\n", fin);
+      printf("Failed to open %s\n", esw_fin);
       exit(1);
     }
     fread(mem, mem_len, 1, in);
     fclose(in);
-    printf("[Loaded flat binary %s]\n", fin);
+    printf("[Loaded flat binary %s]\n", esw_fin);
 #ifdef HAVE_ELF
   }
 #endif
@@ -358,14 +359,14 @@ int main(int argc, char *argv[]) {
 
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
-    if (qinit(ctx)) {
+    if (qinit(ctx, esw_fin)) {
       printf("[qinit failed]\n");
       return 1;
     }
   }
 #endif
 
-  if (!strcmp("em_esw", fin) || !strcmp("em_esw.bin", fin)) {
+  if (!strcmp("em_esw", esw_fin) || !strcmp("em_esw.bin", esw_fin)) {
     printf("[Setting input params at 0x2000: -2 and -3 (will be added as a "
            "result))]\n");
     rv_write32(0x2000, -2);
@@ -391,10 +392,10 @@ int main(int argc, char *argv[]) {
     printf("[qcheck PASSED]\n");
   }
 #endif
-  if (!strcmp("em_esw", fin) || !strcmp("em_esw.bin", fin)) {
+  if (!strcmp("em_esw", esw_fin) || !strcmp("em_esw.bin", esw_fin)) {
     int val = rv_read32(0x2008);
     printf("[Memory state at finish : %d (should be -5)]\n", val);
-  } else if (!strcmp("esw", fin)) {
+  } else if (!strcmp("esw", esw_fin)) {
     printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx->a0);
   }
   rv_destroy(ctx);

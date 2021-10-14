@@ -109,7 +109,7 @@ int foo(int a, int b) {
   printf("atim.sec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_sec);
   printf("atim.nsec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_nsec);
 #endif
-  puts("hello puts\n");
+//  puts("hello puts\n");
   // printf("hello %s\n", "printf");
   return a + b;
   // return -5;
