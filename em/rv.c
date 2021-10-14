@@ -286,13 +286,8 @@ int rv_execute(rv_ctx *ctx) {
         log_printf(1, "SLTU rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
                    rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
                    rv_rname(i.r.rs2));
-        if (i.r.rs1) {
-          printf("rs1 should be zero!\n");
-          die();
-          return 1;
-        }
         if (i.r.rd)
-          ctx->x[i.r.rd] = ctx->x[i.r.rs2] != 0 ? 1 : 0;
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] < ctx->x[i.r.rs2] ? 1 : 0;
         break;
       default:
         die();
@@ -428,7 +423,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "BLT rs1=%s rs2=%s imm=%" PRIx32 "\n", rv_rname(i.b.rs1),
                  rv_rname(i.b.rs2), imm);
       if ((int32_t)(ctx->x[i.b.rs1]) < (int32_t)(ctx->x[i.b.rs2])) {
-        ctx->pc = ctx->pc - 4 + imm;
+        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
       }
       break;
     }
