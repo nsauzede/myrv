@@ -406,35 +406,37 @@ int rv_execute(rv_ctx *ctx) {
     switch (i.r.funct3) {
     case RV_LBU: {
       uint32_t imm = i.i.imm_11_0;
-      log_printf(1, "LW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
+      log_printf(1, "LBU rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), imm);
-      if (i.r.rd)
-        ctx->x[i.i.rd] = rv_read8(ctx, ctx->x[i.r.rs1] + rv_signext(imm, 11));
+      if (i.i.rd) {
+//        printf("SRC=%" PRIx32 "\n", ctx->x[i.i.rs1] + rv_signext(imm, 11));
+        ctx->x[i.i.rd] = rv_read8(ctx, ctx->x[i.i.rs1] + rv_signext(imm, 11));
+      }
       break;
     }
     case RV_LH: {
       uint32_t imm = i.i.imm_11_0;
       log_printf(1, "LH rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), imm);
-      if (i.r.rd)
+      if (i.i.rd)
         ctx->x[i.i.rd] = rv_signext(
-            rv_read16(ctx, ctx->x[i.r.rs1] + rv_signext(imm, 11)), 15);
+            rv_read16(ctx, ctx->x[i.i.rs1] + rv_signext(imm, 11)), 15);
       break;
     }
     case RV_LHU: {
       uint32_t imm = i.i.imm_11_0;
       log_printf(1, "LHU rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), imm);
-      if (i.r.rd)
-        ctx->x[i.i.rd] = rv_read16(ctx, ctx->x[i.r.rs1] + rv_signext(imm, 11));
+      if (i.i.rd)
+        ctx->x[i.i.rd] = rv_read16(ctx, ctx->x[i.i.rs1] + rv_signext(imm, 11));
       break;
     }
     case RV_LW: {
       uint32_t imm = i.i.imm_11_0;
       log_printf(1, "LW rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32,
                  rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), imm);
-      if (i.r.rd)
-        ctx->x[i.i.rd] = rv_read32(ctx, ctx->x[i.r.rs1] + rv_signext(imm, 11));
+      if (i.i.rd)
+        ctx->x[i.i.rd] = rv_read32(ctx, ctx->x[i.i.rs1] + rv_signext(imm, 11));
       break;
     }
     default:
@@ -528,14 +530,14 @@ int rv_execute(rv_ctx *ctx) {
       uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
       log_printf(1, "SB rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
                  rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
-      rv_write8(ctx, ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
+      rv_write8(ctx, ctx->x[i.s.rs1] + rv_signext(imm, 11), ctx->x[i.s.rs2]);
       break;
     }
     case RV_SH: {
       uint32_t imm = i.s.imm_4_0 + (i.s.imm_11_5 << 5);
       log_printf(1, "SH rd=%s funct3=%" PRIx8 " rs1=%s imm=%" PRIx32 "\n",
                  rv_rname(i.s.rs1), i.s.funct3, rv_rname(i.s.rs2), imm);
-      rv_write16(ctx, ctx->x[i.s.rs1] + imm, ctx->x[i.s.rs2]);
+      rv_write16(ctx, ctx->x[i.s.rs1] + rv_signext(imm, 11), ctx->x[i.s.rs2]);
       break;
     }
     case RV_SW: {

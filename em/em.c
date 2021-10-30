@@ -209,14 +209,9 @@ uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
   uint32_t ret = 0;
   if (dest && (addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
     memcpy(dest, mem + addr - mem_start, size);
-  }
-  return ret;
-}
-
-uint32_t rv_write(const void *src, uint32_t addr, uint32_t size) {
-  uint32_t ret = 0;
-  if (src && (addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
-    memcpy(mem + addr - mem_start, src, size);
+  } else {
+  	printf("Illegal read addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
+  	exit(1);
   }
   return ret;
 }
@@ -229,18 +224,28 @@ uint8_t rv_read8(uint32_t addr) {
 
 uint32_t rv_read32(uint32_t addr) {
   uint32_t val = 0;
-  if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len)) {
-    memcpy(&val, mem + addr - mem_start, 4);
-  }
+  rv_read(&val, addr, sizeof(val));
   return val;
 }
 
-int rv_write32(uint32_t addr, uint32_t val) {
-  if ((addr >= mem_start) && (addr + 4 <= mem_start + mem_len)) {
-    memcpy(mem + addr - mem_start, &val, 4);
-    return 0;
+//uint32_t uart0 = 0;
+uint32_t uart0 = 0x300000;	// same UART as in franzflasch/riscv_em
+
+uint32_t rv_write(const void *src, uint32_t addr, uint32_t size) {
+  if (!!uart0 && (addr == uart0) && (size == 4)) {
+    printf("%c", *(unsigned char *)src);
+    fflush(stdout);
+  } else if (src && (addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
+    memcpy(mem + addr - mem_start, src, size);
+  } else {
+  	printf("Illegal write addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
+  	exit(1);
   }
-  return 1;
+  return size;
+}
+
+uint32_t rv_write32(uint32_t addr, uint32_t val) {
+  return rv_write(&val, addr, sizeof(val));
 }
 
 #ifdef HAVE_ELF
