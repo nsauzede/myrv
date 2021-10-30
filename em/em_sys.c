@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "em_sys.h"
 
@@ -11,7 +12,7 @@
     exit(1);                                                                   \
   } while (0)
 
-static int g_log = 0;
+static int g_log = 1;
 #define log_printf(l, ...)                                                     \
   do {                                                                         \
     if (l <= g_log) {                                                          \
@@ -35,6 +36,8 @@ int em_ecall(rv_ctx *ctx) {
     break;
   }
   case 80: {
+    log_printf(1, "FIXME fstat a0=%" PRIx32 " a1=%" PRIx32 "\n", ctx->a0,
+               ctx->a1);
     typedef uint16_t rv_dev_t;
     typedef uint16_t rv_ino_t;
     typedef uint32_t rv_mode_t;
@@ -67,6 +70,8 @@ int em_ecall(rv_ctx *ctx) {
     } rv_stat_t;
     rv_stat_t st;
     memset(&st, 0, sizeof(st));
+    int ret = 0;
+#if 0
     st.st_dev = 0x18;
     st.st_ino = 0x4;
     st.st_mode = 0x2190;
@@ -77,9 +82,22 @@ int em_ecall(rv_ctx *ctx) {
     st.st_size = 0x0;
     st.st_blksize = 0x400;
     st.st_blocks = 0x0;
+#elif 0
+    struct stat hst;
+    ret = fstat(ctx->a0, &hst);
+    st.st_dev = hst.st_dev;
+    st.st_ino = hst.st_ino;
+    st.st_mode = hst.st_mode;
+    st.st_nlink = hst.st_nlink;
+    st.st_uid = hst.st_uid;
+    st.st_gid = hst.st_gid;
+    st.st_rdev = hst.st_rdev;
+    st.st_size = hst.st_size;
+    st.st_blksize = hst.st_blksize;
+    st.st_blocks = hst.st_blocks;
+#endif
     ctx->write(&st, ctx->a1, sizeof(st));
-    log_printf(1, "FIXME fstat a0=%" PRIx32 " a1=%" PRIx32 "\n", ctx->a0,
-               ctx->a1);
+    ctx->a0 = ret;
     // return 1;
     break;
   }
@@ -88,7 +106,13 @@ int em_ecall(rv_ctx *ctx) {
     return 1;
     break;
   }
+  case 214: {
+    log_printf(1, "FIXME sbrk a0=%" PRIx32 " a1=%" PRIx32 "\n", ctx->a0,
+               ctx->a1);
+    break;
+  }
   default:
+    log_printf(1, "unimplemented a7=%" PRIu32 "\n", ctx->a7);
     die();
     return 1;
   }

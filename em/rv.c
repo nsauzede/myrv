@@ -31,7 +31,7 @@ int rv_set_log(rv_ctx *ctx, int log) {
 }
 
 void rv_print_insn(rv_ctx *ctx) {
-  printf("PC=%08" PRIx32 ": a4=%08" PRIx32 " ", ctx->pc, ctx->a4);
+  printf("PC 0x%08" PRIx32 " a4=%08" PRIx32 " ", ctx->pc, ctx->a4);
   rv_insn i;
   i.insn = ctx->last_insn;
   printf("0x%08" PRIx32 " ", i.insn);
@@ -118,6 +118,15 @@ void rv_print_regs(rv_ctx *ctx) {
   }
 }
 
+int64_t rv_signext64(int64_t val, int sbit) {
+  int64_t sign = 0;
+  int64_t mask = 1 << sbit;
+  if (val & mask) {
+    sign = -1 & ~(mask - 1);
+  }
+  return val | sign;
+}
+
 int32_t rv_signext(int32_t val, int sbit) {
   int32_t sign = 0;
   int32_t mask = 1 << sbit;
@@ -147,7 +156,7 @@ int rv_execute(rv_ctx *ctx) {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
-    log_printf(1, "PC=%08" PRIx32 ": a4=%08" PRIx32 " ", ctx->pc - 4, ctx->a4);
+    log_printf(1, "PC 0x%08" PRIx32 " a4=%08" PRIx32 " ", ctx->pc - 4, ctx->a4);
   }
 
   switch (i.opc) {
@@ -202,6 +211,12 @@ int rv_execute(rv_ctx *ctx) {
       if (i.i.rd)
         ctx->x[i.i.rd] =
             ctx->x[i.i.rs1] < (uint32_t)rv_signext(i.i.imm_11_0, 11) ? 1 : 0;
+      break;
+    case RV_XORI:
+      log_printf(1, "XORI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
+                 rv_rname(i.i.rd), i.i.funct3, rv_rname(i.i.rs1), i.i.imm_11_0);
+      if (i.i.rd)
+        ctx->x[i.i.rd] = ctx->x[i.i.rs1] ^ rv_signext(i.i.imm_11_0, 11);
       break;
     case RV_ORI:
       log_printf(1, "ORI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
@@ -271,6 +286,21 @@ int rv_execute(rv_ctx *ctx) {
         if (i.r.rd)
           ctx->x[i.r.rd] = ctx->x[i.r.rs1] << (ctx->x[i.r.rs2] & 0x1f);
         break;
+#ifdef RV32M
+      case RV_MULH:
+        log_printf(1, "MULH rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+                   rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
+                   rv_rname(i.r.rs2));
+        if (i.r.rd) {
+//          int64_t rs1 = rv_signext64(ctx->x[i.r.rs1], 32);
+          int64_t rs2 = rv_signext64(ctx->x[i.r.rs2], 32);
+          int64_t rs1 = ctx->x[i.r.rs1];
+//          int64_t rs2 = ctx->x[i.r.rs2];
+          log_printf(1, "RS1=%" PRIx64 " RS2=%" PRIx64 "\n", rs1, rs2);
+          ctx->x[i.r.rd] = (rs1 * rs2) >> 32;
+        }
+        break;
+#endif
       default:
         die();
         return 1;
@@ -286,13 +316,8 @@ int rv_execute(rv_ctx *ctx) {
         log_printf(1, "SLTU rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
                    rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
                    rv_rname(i.r.rs2));
-        if (i.r.rs1) {
-          printf("rs1 should be zero!\n");
-          die();
-          return 1;
-        }
         if (i.r.rd)
-          ctx->x[i.r.rd] = ctx->x[i.r.rs2] != 0 ? 1 : 0;
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] < ctx->x[i.r.rs2] ? 1 : 0;
         break;
       default:
         die();
@@ -428,7 +453,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "BLT rs1=%s rs2=%s imm=%" PRIx32 "\n", rv_rname(i.b.rs1),
                  rv_rname(i.b.rs2), imm);
       if ((int32_t)(ctx->x[i.b.rs1]) < (int32_t)(ctx->x[i.b.rs2])) {
-        ctx->pc = ctx->pc - 4 + imm;
+        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
       }
       break;
     }
@@ -528,6 +553,7 @@ int rv_execute(rv_ctx *ctx) {
     if (i.j.rd)
       ctx->x[i.j.rd] = ctx->pc;
     ctx->pc = ctx->pc - 4 + rv_signext(imm, 20);
+    log_printf(1, "JAL PC=%" PRIx32 "\n", ctx->pc);
     break;
   }
 
@@ -569,6 +595,7 @@ int rv_execute(rv_ctx *ctx) {
     }
     break;
   default:
+    printf("Unknown opc=%d\n", i.opc);
     die();
     return 1;
   }
