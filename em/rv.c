@@ -491,6 +491,18 @@ int rv_execute(rv_ctx *ctx) {
       }
       break;
     }
+    case RV_BGE: {
+      uint32_t imm = (i.b.imm_12 << 12) + (i.b.imm_11 << 11) +
+                     (i.b.imm_10_5 << 5) + (i.b.imm_4_1 << 1);
+      log_printf(1,
+                 "BGE rs1=%s=%" PRIx32 " rs2=%s=%" PRIx32 " imm=%" PRIx32 "\n",
+                 rv_rname(i.b.rs1), ctx->x[i.b.rs1], rv_rname(i.b.rs2),
+                 ctx->x[i.b.rs2], imm);
+      if (ctx->x[i.b.rs1] >= ctx->x[i.b.rs2]) {
+        ctx->pc = ctx->pc - 4 + imm;
+      }
+      break;
+    }
     case RV_BGEU: {
       uint32_t imm = (i.b.imm_12 << 12) + (i.b.imm_11 << 11) +
                      (i.b.imm_10_5 << 5) + (i.b.imm_4_1 << 1);

@@ -45,6 +45,7 @@ typedef enum {
   RV_BEQ = 0x0,
   RV_BNE = 0x1,
   RV_BLT = 0x4,
+  RV_BGE = 0x5,
   RV_BLTU = 0x6,
   RV_BGEU = 0x7,
   // LOAD
