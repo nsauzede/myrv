@@ -10,6 +10,7 @@
 #define RV_REGS (32 + 1)
 
 #define RV32M
+#define RV32A
 
 typedef enum {
   // opcode
@@ -24,6 +25,10 @@ typedef enum {
   RV_OP = 0x33,
   RV_MISC_MEM = 0x0f,
   RV_SYSTEM = 0x73,
+#ifdef RV32A
+  RV_AMO = 0x2f,
+#endif
+
   // funct3
   // OP
   RV_ADD_SUB = 0x0,
@@ -58,7 +63,12 @@ typedef enum {
   RV_SH = 0x1,
   RV_SW = 0x2,
   // SYSTEM
-  RV_PRIV = 0x0,
+  RV_PRIV = 0x0,	// ECALL, EBREAK
+  RV_CSRRW = 0x1,
+  RV_CSRRWI = 0x5,
+  // MISC-MEM
+  RV_FENCE = 0x0,
+  RV_FENCEI = 0x1,
 
 #ifdef RV32M
   RV_ADD_SUB_MUL = 0x0,
@@ -79,6 +89,11 @@ typedef enum {
   RV_MULHU = 0x01,
   RV_DIV = 0x01,
   RV_REM = 0x01,
+#endif
+  RV_WFI = 0x08,
+  // funct5
+#ifdef RV32A
+  RV_AMOADD = 0x0,
 #endif
   // funct12
   RV_ECALL = 0x000,
@@ -114,6 +129,12 @@ typedef union {
   struct {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, funct12 : 12;
   } sy;
+  struct {
+    uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, rs2 : 5, rl : 1, aq : 1, funct5 : 5;
+  } amo;
+  struct {
+    uint32_t opc : 7, rd : 5, funct3 : 3, rs1_uimm : 5, csr : 12;
+  } csr;
 } rv_insn;
 
 struct rv_ctx;
@@ -122,6 +143,7 @@ typedef uint32_t (*rv_read_cb)(void *dest, uint32_t addr, uint32_t size);
 typedef uint32_t (*rv_write_cb)(const void *src, uint32_t addr, uint32_t size);
 typedef int (*rv_ebreak_cb)(struct rv_ctx *ctx);
 typedef int (*rv_ecall_cb)(struct rv_ctx *ctx);
+typedef int (*rv_csr_cb)(struct rv_ctx *ctx, uint16_t csr, uint32_t *inout, int read, int write);
 
 #define RV_API 0
 
@@ -130,6 +152,7 @@ typedef struct rv_ctx_init {
   rv_write_cb write;
   rv_ebreak_cb ebreak;
   rv_ecall_cb ecall;
+  rv_csr_cb csr;
 } rv_ctx_init;
 
 typedef struct rv_ctx {
@@ -140,6 +163,7 @@ typedef struct rv_ctx {
       rv_write_cb write;
       rv_ebreak_cb ebreak;
       rv_ecall_cb ecall;
+      rv_csr_cb csr;
     };
   };
 
@@ -151,6 +175,7 @@ typedef struct rv_ctx {
           a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6, pc;
     };
   };
+  uint32_t pc_next;
 } rv_ctx;
 
 int rv_set_log(rv_ctx *ctx, int log);

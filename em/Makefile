@@ -19,12 +19,6 @@ TARGET+=esw
 TARGET+=em_esw
 endif
 
-ifdef HAVE_ELF
-CFLAGS+=-DHAVE_ELF
-TARGET+=esw
-TARGET+=em_esw
-endif
-
 CFLAGS:=-Wall -Werror
 CFLAGS+=-g -O0
 

@@ -31,7 +31,7 @@ int rv_set_log(rv_ctx *ctx, int log) {
 }
 
 void rv_print_insn(rv_ctx *ctx) {
-  printf("PC 0x%08" PRIx32 " a4=%08" PRIx32 " ", ctx->pc, ctx->a4);
+  printf("PC 0x%08" PRIx32 " ", ctx->pc);
   rv_insn i;
   i.insn = ctx->last_insn;
   printf("0x%08" PRIx32 " ", i.insn);
@@ -97,7 +97,7 @@ int rv_fetch(rv_ctx *ctx) {
     return 1;
   }
   ctx->last_insn = rv_read32(ctx, ctx->pc);
-  ctx->pc += 4;
+  ctx->pc_next = ctx->pc + 4;
   return 0;
 }
 
@@ -137,6 +137,7 @@ int32_t rv_signext(int32_t val, int sbit) {
 }
 
 int rv_execute(rv_ctx *ctx) {
+  int ret = 0;
   if (!ctx) {
     return 1;
   }
@@ -156,7 +157,7 @@ int rv_execute(rv_ctx *ctx) {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
-    log_printf(1, "PC 0x%08" PRIx32 " a4=%08" PRIx32 " ", ctx->pc - 4, ctx->a4);
+    log_printf(1, "PC 0x%08" PRIx32 " ", ctx->pc);
   }
 
   switch (i.opc) {
@@ -455,7 +456,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "BLT rs1=%s rs2=%s imm=%" PRIx32 "\n", rv_rname(i.b.rs1),
                  rv_rname(i.b.rs2), imm);
       if ((int32_t)(ctx->x[i.b.rs1]) < (int32_t)(ctx->x[i.b.rs2])) {
-        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
+        ctx->pc_next = ctx->pc + rv_signext(imm, 12);
       }
       break;
     }
@@ -465,7 +466,7 @@ int rv_execute(rv_ctx *ctx) {
       log_printf(1, "BLTu rs1=%s rs2=%s imm=%" PRIx32 "\n", rv_rname(i.b.rs1),
                  rv_rname(i.b.rs2), imm);
       if (ctx->x[i.b.rs1] < ctx->x[i.b.rs2]) {
-        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
+        ctx->pc_next = ctx->pc + rv_signext(imm, 12);
       }
       break;
     }
@@ -477,7 +478,7 @@ int rv_execute(rv_ctx *ctx) {
                  rv_rname(i.b.rs1), ctx->x[i.b.rs1], rv_rname(i.b.rs2),
                  ctx->x[i.b.rs2], imm);
       if (ctx->x[i.b.rs1] == ctx->x[i.b.rs2]) {
-        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
+        ctx->pc_next = ctx->pc + rv_signext(imm, 12);
       }
       break;
     }
@@ -489,7 +490,7 @@ int rv_execute(rv_ctx *ctx) {
                  rv_rname(i.b.rs1), ctx->x[i.b.rs1], rv_rname(i.b.rs2),
                  ctx->x[i.b.rs2], imm);
       if (ctx->x[i.b.rs1] != ctx->x[i.b.rs2]) {
-        ctx->pc = ctx->pc - 4 + rv_signext(imm, 12);
+        ctx->pc_next = ctx->pc + rv_signext(imm, 12);
       }
       break;
     }
@@ -501,7 +502,7 @@ int rv_execute(rv_ctx *ctx) {
                  rv_rname(i.b.rs1), ctx->x[i.b.rs1], rv_rname(i.b.rs2),
                  ctx->x[i.b.rs2], imm);
       if (ctx->x[i.b.rs1] >= ctx->x[i.b.rs2]) {
-        ctx->pc = ctx->pc - 4 + imm;
+        ctx->pc_next = ctx->pc + imm;
       }
       break;
     }
@@ -513,7 +514,7 @@ int rv_execute(rv_ctx *ctx) {
                  rv_rname(i.b.rs1), ctx->x[i.b.rs1], rv_rname(i.b.rs2),
                  ctx->x[i.b.rs2], imm);
       if (ctx->x[i.b.rs1] >= ctx->x[i.b.rs2]) {
-        ctx->pc = ctx->pc - 4 + imm;
+        ctx->pc_next = ctx->pc + imm;
       }
       break;
     }
@@ -557,7 +558,7 @@ int rv_execute(rv_ctx *ctx) {
     log_printf(1, "AUIPC rd=%s imm31_12=%" PRIx32 "\n", rv_rname(i.u.rd),
                i.u.imm_31_12);
     if (i.u.rd)
-      ctx->x[i.u.rd] = (i.u.imm_31_12 << 12) + ctx->pc - 4;
+      ctx->x[i.u.rd] = (i.u.imm_31_12 << 12) + ctx->pc;
     break;
 
   case RV_JAL: {
@@ -565,9 +566,9 @@ int rv_execute(rv_ctx *ctx) {
                    (i.j.imm11 << 11) + (i.j.imm_10_1 << 1);
     log_printf(1, "JAL rd=%s imm=%" PRIx32 "\n", rv_rname(i.j.rd), imm);
     if (i.j.rd)
-      ctx->x[i.j.rd] = ctx->pc;
-    ctx->pc = ctx->pc - 4 + rv_signext(imm, 20);
-    log_printf(1, "JAL PC=%" PRIx32 "\n", ctx->pc);
+      ctx->x[i.j.rd] = ctx->pc_next;
+    ctx->pc_next = ctx->pc + rv_signext(imm, 20);
+    log_printf(1, "JAL PC=%" PRIx32 "\n", ctx->pc_next);
     break;
   }
 
@@ -575,8 +576,8 @@ int rv_execute(rv_ctx *ctx) {
     log_printf(1, "JALR rd=%s rs1=%s imm11_0=%" PRIx32 "\n", rv_rname(i.i.rd),
                rv_rname(i.i.rs1), i.i.imm_11_0);
     if (i.i.rd)
-      ctx->x[i.i.rd] = ctx->pc;
-    ctx->pc = (rv_signext(i.i.imm_11_0, 11) + ctx->x[i.i.rs1]) & ~1;
+      ctx->x[i.i.rd] = ctx->pc_next;
+    ctx->pc_next = (rv_signext(i.i.imm_11_0, 11) + ctx->x[i.i.rs1]) & ~1;
     break;
 
   case RV_SYSTEM:
@@ -586,7 +587,8 @@ int rv_execute(rv_ctx *ctx) {
       case RV_EBREAK:
         log_printf(1, "BREAK\n");
         if (ctx->ebreak) {
-          return ctx->ebreak(ctx);
+          ret = ctx->ebreak(ctx);
+          break;
         }
         return 1;
         break;
@@ -594,25 +596,106 @@ int rv_execute(rv_ctx *ctx) {
         log_printf(1, "ECALL rd=%s rs1=%s a7=%" PRIx32 "\n", rv_rname(i.sy.rd),
                    rv_rname(i.sy.rs1), ctx->a7);
         if (ctx->ecall) {
-          return ctx->ecall(ctx);
+          ret = ctx->ecall(ctx);
+          break;
         }
         return 1;
         break;
       default:
-        die();
-        return 1;
+        switch (i.r.funct7) {
+        case 0x08:
+          switch (i.r.rs2) {
+          case 0x5:
+            log_printf(1, "WFI\n");
+            break;
+          default:
+            die();
+            return 1;
+          }
+          break;
+        default:
+          die();
+          return 1;
+        }
       }
+      break;
+    case RV_CSRRW:
+      log_printf(1, "CSRRW\n");
+      if (ctx->csr) {
+        uint32_t val = ctx->x[i.csr.rs1_uimm];
+        ret = ctx->csr(ctx, i.csr.csr, &val, i.csr.rd != 0, 1);
+        if (i.csr.rd) {
+          ctx->x[i.csr.rd] = val;
+        }
+        break;
+      }
+      return 1;
+      break;
+    case RV_CSRRWI:
+      log_printf(1, "CSRRWI\n");
+      if (ctx->csr) {
+        uint32_t val = i.csr.rs1_uimm;
+        ret = ctx->csr(ctx, i.csr.csr, &val, i.csr.rd != 0, 1);
+        if (i.csr.rd) {
+          ctx->x[i.csr.rd] = val;
+        }
+        break;
+      }
+      return 1;
       break;
     default:
       die();
       return 1;
     }
     break;
+
+#ifdef RV32A
+  case RV_AMO:
+    log_printf(1, "AMO ");
+    switch (i.amo.funct5) {
+    case RV_AMOADD:{
+      log_printf(1, "ADD rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s\n",
+                   rv_rname(i.amo.rd), i.amo.funct3, rv_rname(i.amo.rs1),
+                   rv_rname(i.amo.rs2));
+        uint32_t data = rv_read32(ctx, ctx->x[i.amo.rs1]);
+        if (i.amo.rd)
+          ctx->x[i.amo.rd] = data;
+        data += ctx->x[i.s.rs2];
+        rv_write32(ctx, ctx->x[i.s.rs1], data);
+        break;
+    }
+    default:
+      die();
+      return 1;
+    }
+    break;
+#endif
+
+  case RV_MISC_MEM:
+    log_printf(1, "MISC_MEM ");
+    switch (i.r.funct3) {
+    case RV_FENCE:
+      log_printf(1, "FENCE rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+                   rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
+                   rv_rname(i.r.rs2));
+      break;
+    case RV_FENCEI:
+      log_printf(1, "FENCEI rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+                   rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
+                   rv_rname(i.r.rs2));
+      break;
+    default:
+      die();
+      return 1;
+    }
+    break;
+
   default:
     printf("Unknown opc=%d\n", i.opc);
     die();
     return 1;
   }
+  ctx->pc = ctx->pc_next;
 
-  return 0;
+  return ret;
 }

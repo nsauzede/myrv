@@ -312,6 +312,12 @@ int main(int argc, char *argv[]) {
       log += 2;
       continue;
     }
+    if (!strcmp(argv[arg], "-m")) {
+      arg++;
+      sscanf(argv[arg++], "%" SCNx32, &mem_len);
+      start_sp = mem_len;
+      continue;
+    }
     if (pos == 0) {
       esw_fin = argv[arg++];
       pos++;
@@ -350,7 +356,8 @@ int main(int argc, char *argv[]) {
   rv_ctx_init init = {.read = rv_read,
                       .write = rv_write,
                       .ebreak = em_ebreak,
-                      .ecall = em_ecall};
+                      .ecall = em_ecall,
+                      .csr = em_csr};
   rv_ctx *ctx = rv_create(RV_API, init);
   rv_set_log(ctx, log);
 

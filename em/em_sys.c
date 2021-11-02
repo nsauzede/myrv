@@ -118,3 +118,38 @@ int em_ecall(rv_ctx *ctx) {
   }
   return 0;
 }
+
+static uint32_t csr_mtvec = 0;
+static uint32_t csr_mscratch = 0;
+
+int em_csr(rv_ctx *ctx, uint16_t csr, uint32_t *inout, int read, int write) {
+  if (!inout) return 1;
+  switch (csr) {
+  case CSR_MTVEC: {
+    uint32_t oldin = *inout;
+    log_printf(0, "MTVEC in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mtvec);
+    if (read) {
+      *inout = csr_mtvec;
+    }
+    if (write) {
+      csr_mtvec = oldin;
+    }
+    break;
+  }
+  case CSR_MSCRATCH: {
+    uint32_t oldin = *inout;
+    log_printf(0, "MSCRATCH in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mscratch);
+    if (read) {
+      *inout = csr_mscratch;
+    }
+    if (write) {
+      csr_mscratch = oldin;
+    }
+    break;
+  }
+  default:
+    log_printf(0, "CSR=%" PRIx16 " ???\n", csr);
+    return 1;
+  }
+  return 0;
+}
