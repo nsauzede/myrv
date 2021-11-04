@@ -34,12 +34,15 @@ all: $(TARGET)
 
 EM_SRC:=em.c em_sys.c rv.c
 
-ifdef HAVE_ELF
-em:LDLIBS+=-lelf
-EM_SRC+=em_elf.c
+ifdef HAVE_QCHECK
+EM_SRC+=em_qcheck.c
 endif
 
+ifdef HAVE_ELF
+em:LDLIBS+=-lelf
 elf:LDLIBS+=-lelf
+EM_SRC+=em_elf.c
+endif
 
 ifdef V
 # VERBOSE:=-v -v
