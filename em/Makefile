@@ -22,6 +22,7 @@ endif
 
 CFLAGS:=-Wall -Werror
 CFLAGS+=-g -O0
+CFLAGS+=-pthread
 
 ifdef HAVE_ELF
 CFLAGS+=-DHAVE_ELF
