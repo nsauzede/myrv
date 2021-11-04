@@ -13,6 +13,10 @@
 #include "em_elf.h"
 #endif
 
+#ifdef HAVE_GDBSTUB
+#include "em_gdbstub.h"
+#endif
+
 #ifdef HAVE_QCHECK
 #include "em_qcheck.h"
 #endif
@@ -86,6 +90,32 @@ uint32_t rv_write32(uint32_t addr, uint32_t val) {
   return rv_write(&val, addr, sizeof(val));
 }
 
+void help(int argc, char *argv[]) {
+  printf("myrv/em - Simple RISC-V emulator - version %s\n", EM_VERSION);
+  printf("Copyright (c) 2021 Nicolas Sauzede\n");
+  printf("\n");
+  printf("Usage: %s [options] <esw_file <start_pc <start_sp> > >\n", argv[0]);
+  printf("\n");
+#ifdef HAVE_ELF
+  printf("'esw_file' can be ELF or Flat Binary\n");
+#else
+  printf("'esw_file' must be a Flat Binary\n");
+#endif
+  printf("\n");
+  printf("Options:\n");
+  printf("  --help\tDisplay this information.\n");
+  printf("  -v\tSet verbosity level 1.\n");
+  printf("  -vv\tSet verbosity level 2.\n");
+  printf("  -m\tSet custom memory length (in bytes).\n");
+  printf("  -d\tLoad dtb at 0x87e00000 length 1414 (experimental).\n");
+#ifdef HAVE_GDBSTUB
+  printf("  -s\tAccept gdb connection on tcp::1235. Freeze CPU at startup.\n");
+#endif
+#ifdef HAVE_QCHECK
+  printf("  -q\tCompare execution with qemu+gdb.\n");
+#endif
+}
+
 int main(int argc, char *argv[]) {
   uint32_t start_pc = mem_start;
   uint32_t start_sp = mem_start + mem_len;
@@ -97,6 +127,11 @@ int main(int argc, char *argv[]) {
   char *esw_fin = "em_esw.bin";
 #endif
   char *dtb_fin = 0;
+#ifdef HAVE_GDBSTUB
+  int do_gdbstub = 0;
+  int gport = 1235;
+  void *gctx = 0;
+#endif
 #ifdef HAVE_QCHECK
   int do_qcheck = 0;
 #endif
@@ -104,13 +139,11 @@ int main(int argc, char *argv[]) {
   int pos = 0;
   int arg = 1;
   while (arg < argc) {
-#ifdef HAVE_QCHECK
-    if (!strcmp(argv[arg], "-q")) {
+    if (!strcmp(argv[arg], "--help")) {
       arg++;
-      do_qcheck = 1;
-      continue;
+      help(argc, argv);
+      exit(0);
     }
-#endif
     if (!strcmp(argv[arg], "-v")) {
       arg++;
       log++;
@@ -121,6 +154,20 @@ int main(int argc, char *argv[]) {
       log += 2;
       continue;
     }
+#ifdef HAVE_GDBSTUB
+    if (!strcmp(argv[arg], "-s")) {
+      arg++;
+      do_gdbstub = 1;
+      continue;
+    }
+#endif
+#ifdef HAVE_QCHECK
+    if (!strcmp(argv[arg], "-q")) {
+      arg++;
+      do_qcheck = 1;
+      continue;
+    }
+#endif
     if (!strcmp(argv[arg], "-m")) {
       arg++;
       sscanf(argv[arg++], "%" SCNx32, &mem_len);
@@ -203,6 +250,16 @@ int main(int argc, char *argv[]) {
     rv_write32(ctx->sp, 1);
   }
 
+#ifdef HAVE_GDBSTUB
+  if (do_gdbstub) {
+    gctx = ginit(ctx, gport);
+    if (!gctx) {
+      printf("[ginit failed]\n");
+      return 1;
+    }
+  }
+#endif
+
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
     if (qinit(ctx, esw_fin)) {
@@ -219,6 +276,23 @@ int main(int argc, char *argv[]) {
     rv_write32(0x2004, -3);
   }
   while (1) {
+#ifdef HAVE_GDBSTUB
+    if (do_gdbstub) {
+      gstatus_t gs = gstatus(gctx);
+      switch (gs) {
+      case GS_QUIT:
+        printf("[gstatus quit]\n");
+        return 1;
+      case GS_EXECUTE:
+        break;
+      default:
+        printf("[gstatus unknown %d]\n", gs);
+        return 1;
+      }
+      if (!gctx) {
+      }
+    }
+#endif
 #ifdef HAVE_QCHECK
     if (do_qcheck) {
       static int count = 0;
@@ -233,9 +307,15 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
+#ifdef HAVE_GDBSTUB
+  if (do_gdbstub) {
+    gcleanup(gctx);
+  }
+#endif
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
     printf("[qcheck PASSED]\n");
+    qcleanup(ctx);
   }
 #endif
   if (!strcmp("em_esw", esw_fin) || !strcmp("em_esw.bin", esw_fin)) {

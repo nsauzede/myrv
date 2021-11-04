@@ -11,6 +11,7 @@ endif
 
 ifndef WIN32
 HAVE_ELF:=1
+HAVE_GDBSTUB:=1
 HAVE_QCHECK:=1
 endif
 
@@ -26,6 +27,10 @@ ifdef HAVE_ELF
 CFLAGS+=-DHAVE_ELF
 endif
 
+ifdef HAVE_GDBSTUB
+CFLAGS+=-DHAVE_GDBSTUB
+endif
+
 ifdef HAVE_QCHECK
 CFLAGS+=-DHAVE_QCHECK
 endif
@@ -34,14 +39,18 @@ all: $(TARGET)
 
 EM_SRC:=em.c em_sys.c rv.c
 
-ifdef HAVE_QCHECK
-EM_SRC+=em_qcheck.c
-endif
-
 ifdef HAVE_ELF
 em:LDLIBS+=-lelf
 elf:LDLIBS+=-lelf
 EM_SRC+=em_elf.c
+endif
+
+ifdef HAVE_GDBSTUB
+EM_SRC+=em_gdbstub.c
+endif
+
+ifdef HAVE_QCHECK
+EM_SRC+=em_qcheck.c
 endif
 
 ifdef V
