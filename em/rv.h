@@ -65,6 +65,7 @@ typedef enum {
   // SYSTEM
   RV_PRIV = 0x0,	// ECALL, EBREAK
   RV_CSRRW = 0x1,
+  RV_CSRRS = 0x2,
   RV_CSRRWI = 0x5,
   // MISC-MEM
   RV_FENCE = 0x0,

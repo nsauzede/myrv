@@ -157,7 +157,7 @@ int rv_execute(rv_ctx *ctx) {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
-    log_printf(1, "PC 0x%08" PRIx32 " ", ctx->pc);
+    log_printf(1, "PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", ctx->pc, i.insn);
   }
 
   switch (i.opc) {
@@ -331,6 +331,13 @@ int rv_execute(rv_ctx *ctx) {
     case RV_XOR:
 #endif
       switch (i.r.funct7) {
+      case 0x00:
+        log_printf(1, "XOR rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+                   rv_rname(i.r.rd), i.r.funct3, rv_rname(i.r.rs1),
+                   rv_rname(i.r.rs2));
+        if (i.r.rd)
+          ctx->x[i.r.rd] = ctx->x[i.r.rs1] ^ ctx->x[i.r.rs2];
+        break;
 #ifdef RV32M
       case RV_DIV:
         log_printf(1, "DIV rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
@@ -621,6 +628,18 @@ int rv_execute(rv_ctx *ctx) {
       break;
     case RV_CSRRW:
       log_printf(1, "CSRRW\n");
+      if (ctx->csr) {
+        uint32_t val = ctx->x[i.csr.rs1_uimm];
+        ret = ctx->csr(ctx, i.csr.csr, &val, i.csr.rd != 0, 1);
+        if (i.csr.rd) {
+          ctx->x[i.csr.rd] = val;
+        }
+        break;
+      }
+      return 1;
+      break;
+    case RV_CSRRS:
+      log_printf(1, "CSRRS\n");
       if (ctx->csr) {
         uint32_t val = ctx->x[i.csr.rs1_uimm];
         ret = ctx->csr(ctx, i.csr.csr, &val, i.csr.rd != 0, 1);

@@ -121,6 +121,7 @@ int em_ecall(rv_ctx *ctx) {
 
 static uint32_t csr_mtvec = 0;
 static uint32_t csr_mscratch = 0;
+static uint32_t csr_mhartid = 0;
 
 int em_csr(rv_ctx *ctx, uint16_t csr, uint32_t *inout, int read, int write) {
   if (!inout) return 1;
@@ -144,6 +145,17 @@ int em_csr(rv_ctx *ctx, uint16_t csr, uint32_t *inout, int read, int write) {
     }
     if (write) {
       csr_mscratch = oldin;
+    }
+    break;
+  }
+  case CSR_MHARTID: {
+    uint32_t oldin = *inout;
+    log_printf(0, "MHARTID in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mhartid);
+    if (read) {
+      *inout = csr_mhartid;
+    }
+    if (write) {
+      csr_mhartid = oldin;
     }
     break;
   }

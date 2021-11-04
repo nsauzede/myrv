@@ -205,9 +205,29 @@ int qcleanup(rv_ctx *ctx) {
 }
 #endif
 
+static uint32_t rom[] = {
+  0x00000297,
+  0x02828613,
+  0xf1402573,
+  0x0202a583,
+  0x0182a283,
+  0x00028067,
+  0x80000000, //start_addr,
+  0x00000000,
+  0,		//fdt_addr,
+  0x00000000,
+};
+#define ROM_START 0x1000
+#define ROM_LEN sizeof(rom)
+
 uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
+  if (!dest) {
+    return 1;
+  }
   uint32_t ret = 0;
-  if (dest && (addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
+  if ((addr >= ROM_START) && (addr + size <= ROM_START + ROM_LEN)) {
+    memcpy(dest, (void *)rom + addr - ROM_START, size);
+  } else if ((addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
     memcpy(dest, mem + addr - mem_start, size);
   } else {
   	printf("Illegal read addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
@@ -285,7 +305,9 @@ int elf_load(char *fname, uint32_t *entry) {
 
 int main(int argc, char *argv[]) {
   uint32_t start_pc = mem_start;
-  uint32_t start_sp = mem_len;
+  uint32_t start_sp = mem_start + mem_len;
+  int override_pc = 0;
+  int override_sp = 0;
 #ifdef HAVE_ELF
   char *esw_fin = "esw";
 #else
@@ -315,7 +337,6 @@ int main(int argc, char *argv[]) {
     if (!strcmp(argv[arg], "-m")) {
       arg++;
       sscanf(argv[arg++], "%" SCNx32, &mem_len);
-      start_sp = mem_len;
       continue;
     }
     if (pos == 0) {
@@ -325,20 +346,29 @@ int main(int argc, char *argv[]) {
     }
     if (pos == 1) {
       sscanf(argv[arg++], "%" SCNx32, &start_pc);
+      override_pc = 1;
       pos++;
       continue;
     }
     if (pos == 2) {
       sscanf(argv[arg++], "%" SCNx32, &start_sp);
+      override_sp = 1;
       pos++;
       continue;
     }
   }
+  if (!override_sp) {
+    start_sp = mem_start + mem_len;
+  }
 
   mem = calloc(mem_len, 1);
 #ifdef HAVE_ELF
-  if (!elf_load(esw_fin, &start_pc)) {
+  uint32_t pc = start_pc;
+  if (!elf_load(esw_fin, &pc)) {
     printf("[Loaded ELF %s]\n", esw_fin);
+    if (!override_pc) {
+      start_pc = pc;
+    }
   } else {
 #endif
     FILE *in = fopen(esw_fin, "rb");
@@ -366,8 +396,10 @@ int main(int argc, char *argv[]) {
 
   // TODO: Fill the stack with user asrgs/env
   // until we get same final SP and stack contents as in qemu
-  ctx->sp = 0x1ffff40;
-  rv_write32(ctx->sp, 1);
+  if (!override_sp) {
+    ctx->sp = 0x1ffff40;
+    rv_write32(ctx->sp, 1);
+  }
 
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
