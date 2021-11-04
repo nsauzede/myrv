@@ -1,19 +1,18 @@
 #define _GNU_SOURCE // for execvpe
 
-#include <fcntl.h>
+#include "em.h"
+
 #include <malloc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "em_sys.h"
 
 #ifdef HAVE_ELF
-#include <libelf.h>
+#include "em_elf.h"
 #endif
 
 #include "rv.h"
@@ -267,41 +266,6 @@ uint32_t rv_write(const void *src, uint32_t addr, uint32_t size) {
 uint32_t rv_write32(uint32_t addr, uint32_t val) {
   return rv_write(&val, addr, sizeof(val));
 }
-
-#ifdef HAVE_ELF
-int elf_load(char *fname, uint32_t *entry) {
-  elf_version(EV_CURRENT);
-  int fd = open(fname, O_RDONLY, 0);
-  Elf *e = elf_begin(fd, ELF_C_READ, 0);
-  Elf_Kind ek = elf_kind(e);
-  if (ek != ELF_K_ELF) {
-    return 1;
-  }
-  if (!elf32_getehdr(e)) {
-    return 1;
-  }
-  Elf32_Ehdr *hdr = elf32_getehdr(e);
-  if (entry) {
-    *entry = hdr->e_entry;
-  }
-  size_t nph;
-  elf_getphdrnum(e, &nph);
-  Elf32_Phdr *ph = elf32_getphdr(e);
-  for (size_t i = 0; i < nph; i++) {
-    Elf_Data *d =
-        elf_getdata_rawchunk(e, ph[i].p_offset, ph[i].p_filesz, ELF_T_PHDR);
-    uint32_t *p = *(uint32_t **)d;
-    char *zero = calloc(1, ph[i].p_memsz);
-    rv_write(zero, ph[i].p_vaddr, ph[i].p_memsz);
-    free(zero);
-    rv_write(p, ph[i].p_vaddr, ph[i].p_filesz);
-  }
-
-  elf_end(e);
-  close(fd);
-  return 0;
-}
-#endif
 
 int main(int argc, char *argv[]) {
   uint32_t start_pc = mem_start;

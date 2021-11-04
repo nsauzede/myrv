@@ -32,8 +32,11 @@ endif
 
 all: $(TARGET)
 
+EM_SRC:=em.c em_sys.c rv.c
+
 ifdef HAVE_ELF
 em:LDLIBS+=-lelf
+EM_SRC+=em_elf.c
 endif
 
 elf:LDLIBS+=-lelf
@@ -54,7 +57,7 @@ check: rv_test
 rv_test: rv_test.c rv.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-em: em.c em_sys.c rv.c
+em: $(EM_SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 esw: esw.c
