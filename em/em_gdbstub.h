@@ -5,6 +5,7 @@
 
 typedef enum {
     GS_QUIT,
+    GS_STALL,
     GS_EXECUTE,
 } gstatus_t;
 

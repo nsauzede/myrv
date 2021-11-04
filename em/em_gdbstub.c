@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <malloc.h>
 #include <pthread.h>
 #include <sys/types.h>
@@ -25,24 +26,51 @@ static void *gthread(void *arg) {
     gs_ctx *gctx = (gs_ctx *)arg;
     while (1) {
         int max = -1;
-        if (max < gctx->to_thr[0]) {
-            max = gctx->to_thr[0];
-        }
         fd_set rfds;
-        FD_SET(gctx->to_thr[0], &rfds);
+        FD_ZERO(&rfds);
+        if (gctx->to_thr[0] != -1) {
+            FD_SET(gctx->to_thr[0], &rfds);
+            if (max < gctx->to_thr[0]) {
+                max = gctx->to_thr[0];
+            }
+        }
+        if (gctx->cs != -1) {
+            FD_SET(gctx->cs, &rfds);
+            if (max < gctx->cs) {
+                max = gctx->cs;
+            }
+        }
         int n = select(max + 1, &rfds, 0, 0, 0);
         if (n == -1) {
             perror("select");
             exit(1);
         }
         if (n > 0) {
-            gs_cmd_t cmd;
-            read(gctx->to_thr[0], &cmd, sizeof(cmd));
-            gstatus_t gs = GS_EXECUTE;
-            write(gctx->from_thr[1], &gs, sizeof(gs));
-        } else {
-            sleep(1);
+           printf("Something to read! %d\n", n);
+            if (FD_ISSET(gctx->cs, &rfds)) {
+                printf("Reading CS\n");
+                int val;
+                n = read(gctx->cs, &val, sizeof(val));
+                if (!n) {
+                    printf("CS hangup\n");
+                    printf("Writing STATUS\n");
+                    gstatus_t gs = GS_QUIT;
+                    write(gctx->from_thr[1], &gs, sizeof(gs));
+                    break;
+                }
+                printf("Got CS %d\n", val);
+                printf("Writing STATUS\n");
+                gstatus_t gs = GS_EXECUTE;
+                write(gctx->from_thr[1], &gs, sizeof(gs));
+            }
+            if (FD_ISSET(gctx->to_thr[0], &rfds)) {
+                printf("Reading CMD\n");
+                gs_cmd_t cmd;
+                read(gctx->to_thr[0], &cmd, sizeof(cmd));
+                printf("Got CMD %d\n", cmd);
+            }
         }
+//        sleep(1);
     }
     return 0;
 }
@@ -80,7 +108,7 @@ void *ginit(rv_ctx *rctx, int port) {
 }
 
 gstatus_t gstatus(struct gctx *gctx) {
-    gstatus_t gs;
+    gstatus_t gs = GS_STALL;
     gs_cmd_t cmd = GS_STATUS;
     write(gctx->to_thr[1], &cmd, sizeof(cmd));
     read(gctx->from_thr[0], &gs, sizeof(gs));

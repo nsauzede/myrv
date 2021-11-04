@@ -2,6 +2,7 @@
 
 #include "em.h"
 
+#include <unistd.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -283,6 +284,9 @@ int main(int argc, char *argv[]) {
       case GS_QUIT:
         printf("[gstatus quit]\n");
         return 1;
+      case GS_STALL:
+        sleep(1);
+        continue;
       case GS_EXECUTE:
         break;
       default:
