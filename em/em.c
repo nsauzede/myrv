@@ -214,7 +214,7 @@ static uint32_t rom[] = {
   0x00028067,
   0x80000000, //start_addr,
   0x00000000,
-  0,		//fdt_addr,
+  0x87e00000,		//fdt_addr,
   0x00000000,
 };
 #define ROM_START 0x1000
@@ -313,6 +313,7 @@ int main(int argc, char *argv[]) {
 #else
   char *esw_fin = "em_esw.bin";
 #endif
+  char *dtb_fin = 0;
   int log = 0;
   int pos = 0;
   int arg = 1;
@@ -337,6 +338,11 @@ int main(int argc, char *argv[]) {
     if (!strcmp(argv[arg], "-m")) {
       arg++;
       sscanf(argv[arg++], "%" SCNx32, &mem_len);
+      continue;
+    }
+    if (!strcmp(argv[arg], "-d")) {
+      arg++;
+      dtb_fin = argv[arg++];
       continue;
     }
     if (pos == 0) {
@@ -382,6 +388,16 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_ELF
   }
 #endif
+  if (dtb_fin) {
+    FILE *in = fopen(dtb_fin, "rb");
+    if (!in) {
+      printf("Failed to open %s\n", dtb_fin);
+      exit(1);
+    }
+    fread(mem + 0x87e00000 - mem_start, 1414, 1, in);
+    fclose(in);
+    printf("[Loaded DTB %s]\n", dtb_fin);
+  }
 
   rv_ctx_init init = {.read = rv_read,
                       .write = rv_write,

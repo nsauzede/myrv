@@ -157,7 +157,8 @@ int rv_execute(rv_ctx *ctx) {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
-    log_printf(1, "PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", ctx->pc, i.insn);
+    static int counter = 0;
+    log_printf(1, "%d PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", counter++, ctx->pc, i.insn);
   }
 
   switch (i.opc) {
@@ -575,7 +576,7 @@ int rv_execute(rv_ctx *ctx) {
     if (i.j.rd)
       ctx->x[i.j.rd] = ctx->pc_next;
     ctx->pc_next = ctx->pc + rv_signext(imm, 20);
-    log_printf(1, "JAL PC=%" PRIx32 "\n", ctx->pc_next);
+//    log_printf(1, "JAL PC=%" PRIx32 "\n", ctx->pc_next);
     break;
   }
 

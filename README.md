@@ -112,5 +112,5 @@ Very early. Doesn't work yet. (lots of required insn missing, device tree suppor
 
 Can be tried like this:
 ```
-./em <linux_for_riscv_em-path>/output_mmu_rv32/opensbi/build/platform/generic/firmware/fw_payload.elf -m 0x90000000 0x1000 0 -v
+./em <path_to_riscv_em_linux>/fw_payload.elf -m 0x90000000 0x1000 0 -d <path_to_riscv_em>/dts/riscv_em32_linux.dtb -v
 ```
