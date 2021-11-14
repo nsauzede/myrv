@@ -22,72 +22,80 @@
 
 uint32_t mem_start = 0;
 uint32_t mem_len = 0x2000000;
-unsigned char *mem = 0;
+unsigned char* mem = 0;
 
 static uint32_t rom[] = {
-  0x00000297,
-  0x02828613,
-  0xf1402573,
-  0x0202a583,
-  0x0182a283,
-  0x00028067,
-  0x80000000, //start_addr,
+  0x00000297, 0x02828613, 0xf1402573, 0x0202a583, 0x0182a283, 0x00028067,
+  0x80000000, // start_addr,
   0x00000000,
-  0x87e00000,		//fdt_addr,
+  0x87e00000, // fdt_addr,
   0x00000000,
 };
 #define ROM_START 0x1000
 #define ROM_LEN sizeof(rom)
 
-uint32_t rv_read(void *dest, uint32_t addr, uint32_t size) {
+uint32_t
+rv_read(void* dest, uint32_t addr, uint32_t size)
+{
   if (!dest) {
     return 1;
   }
   uint32_t ret = 0;
   if ((addr >= ROM_START) && (addr + size <= ROM_START + ROM_LEN)) {
-    memcpy(dest, (void *)rom + addr - ROM_START, size);
+    memcpy(dest, (void*)rom + addr - ROM_START, size);
   } else if ((addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
     memcpy(dest, mem + addr - mem_start, size);
   } else {
-  	printf("Illegal read addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
-  	exit(1);
+    printf("Illegal read addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
+    exit(1);
   }
   return ret;
 }
 
-uint8_t rv_read8(uint32_t addr) {
+uint8_t
+rv_read8(uint32_t addr)
+{
   uint8_t val = 0;
   rv_read(&val, addr, sizeof(val));
   return val;
 }
 
-uint32_t rv_read32(uint32_t addr) {
+uint32_t
+rv_read32(uint32_t addr)
+{
   uint32_t val = 0;
   rv_read(&val, addr, sizeof(val));
   return val;
 }
 
-//uint32_t uart0 = 0;
-uint32_t uart0 = 0x300000;	// same UART as in franzflasch/riscv_em
+// uint32_t uart0 = 0;
+uint32_t uart0 = 0x300000; // same UART as in franzflasch/riscv_em
 
-uint32_t rv_write(const void *src, uint32_t addr, uint32_t size) {
+uint32_t
+rv_write(const void* src, uint32_t addr, uint32_t size)
+{
   if (!!uart0 && (addr == uart0) && (size == 4)) {
-    printf("%c", *(unsigned char *)src);
+    printf("%c", *(unsigned char*)src);
     fflush(stdout);
-  } else if (src && (addr >= mem_start) && (addr + size <= mem_start + mem_len)) {
+  } else if (src && (addr >= mem_start) &&
+             (addr + size <= mem_start + mem_len)) {
     memcpy(mem + addr - mem_start, src, size);
   } else {
-  	printf("Illegal write addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
-  	exit(1);
+    printf("Illegal write addr=0x%" PRIx32 " size=%" PRIu32 "\n", addr, size);
+    exit(1);
   }
   return size;
 }
 
-uint32_t rv_write32(uint32_t addr, uint32_t val) {
+uint32_t
+rv_write32(uint32_t addr, uint32_t val)
+{
   return rv_write(&val, addr, sizeof(val));
 }
 
-void help(int argc, char *argv[]) {
+void
+help(int argc, char* argv[])
+{
   printf("myrv/em - Simple RISC-V emulator - version %s\n", EM_VERSION);
   printf("Copyright (c) 2021 Nicolas Sauzede\n");
   printf("\n");
@@ -113,17 +121,19 @@ void help(int argc, char *argv[]) {
 #endif
 }
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char* argv[])
+{
   uint32_t start_pc = mem_start;
   uint32_t start_sp = mem_start + mem_len;
   int override_pc = 0;
   int override_sp = 0;
 #ifdef HAVE_ELF
-  char *esw_fin = "esw";
+  char* esw_fin = "esw";
 #else
-  char *esw_fin = "em_esw.bin";
+  char* esw_fin = "em_esw.bin";
 #endif
-  char *dtb_fin = 0;
+  char* dtb_fin = 0;
 #ifdef HAVE_GDBSTUB
   int gport = 0;
 #endif
@@ -205,7 +215,7 @@ int main(int argc, char *argv[]) {
     }
   } else {
 #endif
-    FILE *in = fopen(esw_fin, "rb");
+    FILE* in = fopen(esw_fin, "rb");
     if (!in) {
       printf("Failed to open %s\n", esw_fin);
       exit(1);
@@ -217,7 +227,7 @@ int main(int argc, char *argv[]) {
   }
 #endif
   if (dtb_fin) {
-    FILE *in = fopen(dtb_fin, "rb");
+    FILE* in = fopen(dtb_fin, "rb");
     if (!in) {
       printf("Failed to open %s\n", dtb_fin);
       exit(1);
@@ -227,16 +237,17 @@ int main(int argc, char *argv[]) {
     printf("[Loaded DTB %s]\n", dtb_fin);
   }
 
-  rv_ctx_init init = {.read = rv_read,
-                      .write = rv_write,
-                      .ebreak = em_ebreak,
-                      .ecall = em_ecall,
-                      .csr = em_csr,
+  rv_ctx_init init = {
+    .read = rv_read,
+    .write = rv_write,
+    .ebreak = em_ebreak,
+    .ecall = em_ecall,
+    .csr = em_csr,
 #ifdef HAVE_GDBSTUB
-                      .rsp_port = gport,
+    .rsp_port = gport,
 #endif
-                      };
-  rv_ctx *ctx = rv_create(RV_API, init);
+  };
+  rv_ctx* ctx = rv_create(RV_API, init);
   rv_set_log(ctx, log);
 
   ctx->sp = start_sp;

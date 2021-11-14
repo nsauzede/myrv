@@ -7,8 +7,10 @@
 
 typedef void rv_ctx;
 
-int get_line(int fd, char *buf, size_t size) {
-  char *ptr = buf;
+int
+get_line(int fd, char* buf, size_t size)
+{
+  char* ptr = buf;
   size_t len = 0;
   while (1) {
     if (len >= size)
@@ -25,8 +27,9 @@ int get_line(int fd, char *buf, size_t size) {
   return 0;
 }
 
-int wait_for(int fd, char *prompt, char *prefix, int quit_on_output,
-             int print_all) {
+int
+wait_for(int fd, char* prompt, char* prefix, int quit_on_output, int print_all)
+{
   while (1) {
     char buf[1024];
     memset(buf, 0, sizeof(buf));
@@ -51,31 +54,34 @@ int wait_for(int fd, char *prompt, char *prefix, int quit_on_output,
 static int pipe_to_qemu[2];
 static int pipe_from_qemu[2];
 static int pipe_fromerr_qemu[2];
-int qinit(rv_ctx *ctx) {
+int
+qinit(rv_ctx* ctx)
+{
   pipe(pipe_to_qemu);
   pipe(pipe_from_qemu);
   pipe(pipe_fromerr_qemu);
 
   int qpid = fork();
   switch (qpid) {
-  case 0: {
-    close(pipe_to_qemu[1]);
-    close(pipe_from_qemu[0]);
-    close(pipe_fromerr_qemu[0]);
-    dup2(pipe_to_qemu[0], 0);
-    dup2(pipe_from_qemu[1], 1);
-    dup2(pipe_fromerr_qemu[1], 2);
-    // qemu-riscv32 -g 1234 -s 0x200 esw&
-    char *newargv[] = {
-        "/usr/bin/qemu-riscv32", "-g", "1234", "-s", "1234", "esw", NULL};
-    char *newenviron[] = {NULL};
+    case 0: {
+      close(pipe_to_qemu[1]);
+      close(pipe_from_qemu[0]);
+      close(pipe_fromerr_qemu[0]);
+      dup2(pipe_to_qemu[0], 0);
+      dup2(pipe_from_qemu[1], 1);
+      dup2(pipe_fromerr_qemu[1], 2);
+      // qemu-riscv32 -g 1234 -s 0x200 esw&
+      char* newargv[] = {
+        "/usr/bin/qemu-riscv32", "-g", "1234", "-s", "1234", "esw", NULL
+      };
+      char* newenviron[] = { NULL };
 
-    execve(newargv[0], newargv, newenviron);
-    perror("execve"); /* execve() returns only on error */
-    exit(EXIT_FAILURE);
-  }
-  default:
-    break;
+      execve(newargv[0], newargv, newenviron);
+      perror("execve"); /* execve() returns only on error */
+      exit(EXIT_FAILURE);
+    }
+    default:
+      break;
   }
   close(pipe_to_qemu[0]);
   close(pipe_from_qemu[1]);
@@ -91,35 +97,37 @@ int qinit(rv_ctx *ctx) {
 
   int gpid = fork();
   switch (gpid) {
-  case 0: {
-    close(pipe_to_qemu[1]);
-    close(pipe_from_qemu[0]);
-    close(pipe_fromerr_qemu[0]);
-    close(pipe_to_gdb[1]);
-    close(pipe_from_gdb[0]);
-    close(pipe_fromerr_gdb[0]);
-    dup2(pipe_to_gdb[0], 0);
-    dup2(pipe_from_gdb[1], 1);
-    dup2(pipe_fromerr_gdb[1], 2);
-    // riscv32-unknown-elf-gdb -q -nx -ex target\ remote\ 127.0.0.1:1234 esw
-    // -i=mi
-    char *newargv[] = {"/home/nico/perso/git/riscv-gnu-toolchain/the_install/"
-                       "bin/riscv32-unknown-elf-gdb",
-                       "-q",
-                       "-nx",
-                       "-ex",
-                       "target remote 127.0.0.1:1234",
-                       "esw",
-                       "-i=mi",
-                       NULL};
-    char *newenviron[] = {NULL};
+    case 0: {
+      close(pipe_to_qemu[1]);
+      close(pipe_from_qemu[0]);
+      close(pipe_fromerr_qemu[0]);
+      close(pipe_to_gdb[1]);
+      close(pipe_from_gdb[0]);
+      close(pipe_fromerr_gdb[0]);
+      dup2(pipe_to_gdb[0], 0);
+      dup2(pipe_from_gdb[1], 1);
+      dup2(pipe_fromerr_gdb[1], 2);
+      // riscv32-unknown-elf-gdb -q -nx -ex target\ remote\ 127.0.0.1:1234 esw
+      // -i=mi
+      char* newargv[] = {
+        "/home/nico/perso/git/riscv-gnu-toolchain/the_install/"
+        "bin/riscv32-unknown-elf-gdb",
+        "-q",
+        "-nx",
+        "-ex",
+        "target remote 127.0.0.1:1234",
+        "esw",
+        "-i=mi",
+        NULL
+      };
+      char* newenviron[] = { NULL };
 
-    execve(newargv[0], newargv, newenviron);
-    perror("execve"); /* execve() returns only on error */
-    exit(EXIT_FAILURE);
-  }
-  default:
-    break;
+      execve(newargv[0], newargv, newenviron);
+      perror("execve"); /* execve() returns only on error */
+      exit(EXIT_FAILURE);
+    }
+    default:
+      break;
   }
   close(pipe_to_gdb[0]);
   close(pipe_from_gdb[1]);
@@ -139,9 +147,9 @@ int qinit(rv_ctx *ctx) {
     if (get_line(pipe_from_gdb[0], buf, sizeof(buf)))
       break;
     // printf("%s", buf);
-    char *str = buf;
+    char* str = buf;
     while (1) {
-      char *next = strstr(str, "~\"");
+      char* next = strstr(str, "~\"");
       if (!next)
         break;
       uint32_t val = 0;
@@ -170,9 +178,15 @@ int qinit(rv_ctx *ctx) {
   return 0;
 }
 
-int qcheck(rv_ctx *ctx) { return 1; }
+int
+qcheck(rv_ctx* ctx)
+{
+  return 1;
+}
 
-int main() {
+int
+main()
+{
   qinit(0);
   qcheck(0);
 }

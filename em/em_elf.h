@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
-int elf_load(char *fname, uint32_t *entry);
+int
+elf_load(char* fname, uint32_t* entry);
 
-#endif/*EM_ELF_H_*/
+#endif /*EM_ELF_H_*/

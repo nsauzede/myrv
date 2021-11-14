@@ -12,7 +12,8 @@
 #define RV32M
 #define RV32A
 
-typedef enum {
+typedef enum
+{
   // opcode
   RV_LUI = 0x37,
   RV_AUIPC = 0x17,
@@ -63,7 +64,7 @@ typedef enum {
   RV_SH = 0x1,
   RV_SW = 0x2,
   // SYSTEM
-  RV_PRIV = 0x0,	// ECALL, EBREAK
+  RV_PRIV = 0x0, // ECALL, EBREAK
   RV_CSRRW = 0x1,
   RV_CSRRS = 0x2,
   RV_CSRRWI = 0x5,
@@ -92,7 +93,7 @@ typedef enum {
   RV_REM = 0x01,
 #endif
   RV_WFI = 0x08,
-  // funct5
+// funct5
 #ifdef RV32A
   RV_AMOADD = 0x0,
 #endif
@@ -101,54 +102,71 @@ typedef enum {
   RV_EBREAK = 0x001,
 } rv_opc;
 
-typedef union {
+typedef union
+{
   uint32_t insn;
   uint32_t opc : 7;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, rs2 : 5, funct7 : 7;
   } r;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, imm_11_0 : 12;
   } i;
-  struct {
+  struct
+  {
     uint32_t opc : 7, imm_4_0 : 5, funct3 : 3, rs1 : 5, rs2 : 5, imm_11_5 : 7;
   } s;
-  struct {
+  struct
+  {
     uint32_t opc : 7, imm_11 : 1, imm_4_1 : 4, funct3 : 3, rs1 : 5, rs2 : 5,
-        imm_10_5 : 6, imm_12 : 1;
+      imm_10_5 : 6, imm_12 : 1;
   } b;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, imm_31_12 : 20;
   } u;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, imm_19_12 : 8, imm11 : 1, imm_10_1 : 10,
-        imm_20 : 1;
+      imm_20 : 1;
   } j;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, imm_4_0 : 5, imm_11_5 : 7;
   } sh;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, funct12 : 12;
   } sy;
-  struct {
-    uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, rs2 : 5, rl : 1, aq : 1, funct5 : 5;
+  struct
+  {
+    uint32_t opc : 7, rd : 5, funct3 : 3, rs1 : 5, rs2 : 5, rl : 1, aq : 1,
+      funct5 : 5;
   } amo;
-  struct {
+  struct
+  {
     uint32_t opc : 7, rd : 5, funct3 : 3, rs1_uimm : 5, csr : 12;
   } csr;
 } rv_insn;
 
 struct rv_ctx;
 
-typedef uint32_t (*rv_read_cb)(void *dest, uint32_t addr, uint32_t size);
-typedef uint32_t (*rv_write_cb)(const void *src, uint32_t addr, uint32_t size);
-typedef int (*rv_ebreak_cb)(struct rv_ctx *ctx);
-typedef int (*rv_ecall_cb)(struct rv_ctx *ctx);
-typedef int (*rv_csr_cb)(struct rv_ctx *ctx, uint16_t csr, uint32_t *inout, int read, int write);
+typedef uint32_t (*rv_read_cb)(void* dest, uint32_t addr, uint32_t size);
+typedef uint32_t (*rv_write_cb)(const void* src, uint32_t addr, uint32_t size);
+typedef int (*rv_ebreak_cb)(struct rv_ctx* ctx);
+typedef int (*rv_ecall_cb)(struct rv_ctx* ctx);
+typedef int (*rv_csr_cb)(struct rv_ctx* ctx,
+                         uint16_t csr,
+                         uint32_t* inout,
+                         int read,
+                         int write);
 
 #define RV_API 0
 
-typedef struct rv_ctx_init {
+typedef struct rv_ctx_init
+{
   rv_read_cb read;
   rv_write_cb write;
   rv_ebreak_cb ebreak;
@@ -160,10 +178,13 @@ typedef struct rv_ctx_init {
 #endif
 } rv_ctx_init;
 
-typedef struct rv_ctx {
-  union {
+typedef struct rv_ctx
+{
+  union
+  {
     rv_ctx_init init;
-    struct {
+    struct
+    {
       rv_read_cb read;
       rv_write_cb write;
       rv_ebreak_cb ebreak;
@@ -173,24 +194,32 @@ typedef struct rv_ctx {
   };
 
   uint32_t last_insn;
-  union {
+  union
+  {
     uint32_t x[RV_REGS];
-    struct {
+    struct
+    {
       uint32_t zero, ra, sp, gp, tp, t0, t1, t2, s0, s1, a0, a1, a2, a3, a4, a5,
-          a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6, pc;
+        a6, a7, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, t3, t4, t5, t6, pc;
     };
   };
   uint32_t pc_next;
 #ifdef HAVE_GDBSTUB
-  void *rsp;
+  void* rsp;
 #endif
 } rv_ctx;
 
-int rv_set_log(rv_ctx *ctx, int log);
-rv_ctx *rv_create(int api, rv_ctx_init init);
-int rv_destroy(rv_ctx *ctx);
-int rv_execute(rv_ctx *ctx);
-void rv_print_regs(rv_ctx *ctx);
-char *rv_rname(uint8_t reg);
+int
+rv_set_log(rv_ctx* ctx, int log);
+rv_ctx*
+rv_create(int api, rv_ctx_init init);
+int
+rv_destroy(rv_ctx* ctx);
+int
+rv_execute(rv_ctx* ctx);
+void
+rv_print_regs(rv_ctx* ctx);
+char*
+rv_rname(uint8_t reg);
 
 #endif /*RV_H__*/

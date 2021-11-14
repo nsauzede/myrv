@@ -9,16 +9,24 @@
 #ifdef __riscv
 #define EBREAK asm volatile("ebreak")
 
-void first_func() { EBREAK; }
+void
+first_func()
+{
+  EBREAK;
+}
 
-void start();
+void
+start();
 // void _start() { start(); }
 
-int foo(int a, int b);
-void start() {
-  int *a = (int *)0x2000;
-  int *b = (int *)0x2004;
-  int *c = (int *)0x2008;
+int
+foo(int a, int b);
+void
+start()
+{
+  int* a = (int*)0x2000;
+  int* b = (int*)0x2004;
+  int* c = (int*)0x2008;
 
   *c = foo(*a, *b);
   // *(uint32_t *)0x2008 = foo(*a, *b);
@@ -27,7 +35,9 @@ void start() {
   exit(1);
 }
 #endif
-int foo(int a, int b) {
+int
+foo(int a, int b)
+{
 #ifdef __riscv
 #define GREETING "Hello riscv\n"
 #else
@@ -109,9 +119,13 @@ int foo(int a, int b) {
   printf("atim.sec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_sec);
   printf("atim.nsec=%" PRIx32 "\n", (uint32_t)st.st_atim.tv_nsec);
 #endif
-//  puts("hello puts\n");
+  //  puts("hello puts\n");
   // printf("hello %s\n", "printf");
   return a + b;
   // return -5;
 }
-int main() { return foo(-2, -3); }
+int
+main()
+{
+  return foo(-2, -3);
+}
