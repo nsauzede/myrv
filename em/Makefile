@@ -96,3 +96,8 @@ em_esw: em_esw.o
 
 clean:
 	$(RM) *.o *.bin rv_test em em_esw esw elf qcheck
+
+clobber: clean
+
+mrproper: clobber
+	$(RM) -Rf librspd
