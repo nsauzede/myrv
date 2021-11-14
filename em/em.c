@@ -14,10 +14,6 @@
 #include "em_elf.h"
 #endif
 
-#ifdef HAVE_GDBSTUB
-#include "em_gdbstub.h"
-#endif
-
 #ifdef HAVE_QCHECK
 #include "em_qcheck.h"
 #endif
@@ -129,9 +125,7 @@ int main(int argc, char *argv[]) {
 #endif
   char *dtb_fin = 0;
 #ifdef HAVE_GDBSTUB
-  int do_gdbstub = 0;
-  int gport = 1235;
-  void *gctx = 0;
+  int gport = 0;
 #endif
 #ifdef HAVE_QCHECK
   int do_qcheck = 0;
@@ -158,7 +152,7 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_GDBSTUB
     if (!strcmp(argv[arg], "-s")) {
       arg++;
-      do_gdbstub = 1;
+      gport = 1235;
       continue;
     }
 #endif
@@ -237,7 +231,11 @@ int main(int argc, char *argv[]) {
                       .write = rv_write,
                       .ebreak = em_ebreak,
                       .ecall = em_ecall,
-                      .csr = em_csr};
+                      .csr = em_csr,
+#ifdef HAVE_GDBSTUB
+                      .rsp_port = gport,
+#endif
+                      };
   rv_ctx *ctx = rv_create(RV_API, init);
   rv_set_log(ctx, log);
 
@@ -250,16 +248,6 @@ int main(int argc, char *argv[]) {
     ctx->sp = 0x1ffff40;
     rv_write32(ctx->sp, 1);
   }
-
-#ifdef HAVE_GDBSTUB
-  if (do_gdbstub) {
-    gctx = ginit(ctx, gport);
-    if (!gctx) {
-      printf("[ginit failed]\n");
-      return 1;
-    }
-  }
-#endif
 
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
@@ -277,26 +265,6 @@ int main(int argc, char *argv[]) {
     rv_write32(0x2004, -3);
   }
   while (1) {
-#ifdef HAVE_GDBSTUB
-    if (do_gdbstub) {
-      gstatus_t gs = gstatus(gctx);
-      switch (gs) {
-      case GS_QUIT:
-        printf("[gstatus quit]\n");
-        return 1;
-      case GS_STALL:
-        sleep(1);
-        continue;
-      case GS_EXECUTE:
-        break;
-      default:
-        printf("[gstatus unknown %d]\n", gs);
-        return 1;
-      }
-      if (!gctx) {
-      }
-    }
-#endif
 #ifdef HAVE_QCHECK
     if (do_qcheck) {
       static int count = 0;
@@ -311,11 +279,6 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-#ifdef HAVE_GDBSTUB
-  if (do_gdbstub) {
-    gcleanup(gctx);
-  }
-#endif
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
     printf("[qcheck PASSED]\n");

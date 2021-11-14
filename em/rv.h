@@ -154,6 +154,10 @@ typedef struct rv_ctx_init {
   rv_ebreak_cb ebreak;
   rv_ecall_cb ecall;
   rv_csr_cb csr;
+#ifdef HAVE_GDBSTUB
+  int rsp_port;
+  int rsp_debug;
+#endif
 } rv_ctx_init;
 
 typedef struct rv_ctx {
@@ -177,6 +181,9 @@ typedef struct rv_ctx {
     };
   };
   uint32_t pc_next;
+#ifdef HAVE_GDBSTUB
+  void *rsp;
+#endif
 } rv_ctx;
 
 int rv_set_log(rv_ctx *ctx, int log);

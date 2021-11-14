@@ -7,6 +7,10 @@
 
 #include "rv.h"
 
+#ifdef HAVE_GDBSTUB
+#include "librspd.h"
+#endif
+
 #define die()                                                                  \
   do {                                                                         \
     printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
@@ -73,6 +77,60 @@ static uint32_t rv_write32(rv_ctx *ctx, uint32_t addr, uint32_t val) {
   return ctx->write(&val, addr, sizeof(val));
 }
 
+static int
+rsp_question(void* user)
+{
+  void *rsp = *(void **)user;
+  char* buf = "S05";
+  rsp_send(rsp, buf, strlen(buf));
+  return 0;
+}
+
+static int
+rsp_stepi(void* user)
+{
+  rsp_question(user);
+  return 0;
+}
+
+static int
+rsp_cont(void* user)
+{
+  rsp_question(user);
+  return 0;
+}
+
+static int killed = 0;
+int
+rsp_kill(void* user)
+{
+  user = user;
+  killed = 1;
+  return 0;
+}
+
+#define LEN32 (400 * 2)
+static int
+rsp_get_regs(void* user)
+{
+  void *rsp = *(void **)user;
+  char buf[LEN32 + 1];
+  int len = LEN32;
+  memset(buf, '0', len);
+  rsp_send(rsp, buf, len);
+  return 0;
+}
+
+static int
+rsp_read_mem(void* user, size_t addr, size_t len)
+{
+  void *rsp = *(void **)user;
+  char* buf = malloc(len * 2);
+  memset(buf, '0' + (addr % 10), len * 2);
+  rsp_send(rsp, buf, len * 2);
+  return 0;
+}
+
 rv_ctx *rv_create(int api, rv_ctx_init init) {
   if (api > RV_API)
     return 0;
@@ -81,12 +139,35 @@ rv_ctx *rv_create(int api, rv_ctx_init init) {
   }
   rv_ctx *ctx = calloc(1, sizeof(rv_ctx));
   ctx->init = init;
+#ifdef HAVE_GDBSTUB
+  if (ctx->init.rsp_port) {
+    ctx->rsp = rsp_init(&(rsp_init_t){
+      .user = &ctx->rsp,
+      .port = ctx->init.rsp_port,
+      .debug = ctx->init.rsp_debug,
+      .question = rsp_question,
+      .get_regs = rsp_get_regs,
+      .read_mem = rsp_read_mem,
+      .stepi = rsp_stepi,
+      .cont = rsp_cont,
+      .kill = rsp_kill,
+#if 0
+      .intr = rsp_intr,
+#endif
+    });
+  }
+#endif
   return ctx;
 }
 
 int rv_destroy(rv_ctx *ctx) {
   if (!ctx)
     return 1;
+#ifdef HAVE_GDBSTUB
+  if (ctx->rsp) {
+    rsp_cleanup(ctx->rsp);
+  }
+#endif
   free(ctx);
   return 0;
 }
@@ -136,7 +217,7 @@ int32_t rv_signext(int32_t val, int sbit) {
   return val | sign;
 }
 
-int rv_execute(rv_ctx *ctx) {
+static int rv_step(rv_ctx *ctx) {
   int ret = 0;
   if (!ctx) {
     return 1;
@@ -717,5 +798,18 @@ int rv_execute(rv_ctx *ctx) {
   }
   ctx->pc = ctx->pc_next;
 
+  return ret;
+}
+
+int rv_execute(rv_ctx *ctx) {
+  int ret = 0;
+  if (!ctx) {
+    return 1;
+  }
+  if (ctx->rsp) {
+    ret = rsp_execute(ctx->rsp);
+  } else {
+    ret = rv_step(ctx);
+  }
   return ret;
 }

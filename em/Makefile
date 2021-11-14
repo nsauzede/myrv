@@ -46,10 +46,6 @@ elf:LDLIBS+=-lelf
 EM_SRC+=em_elf.c
 endif
 
-ifdef HAVE_GDBSTUB
-EM_SRC+=em_gdbstub.c
-endif
-
 ifdef HAVE_QCHECK
 EM_SRC+=em_qcheck.c
 endif
@@ -58,6 +54,9 @@ ifdef V
 # VERBOSE:=-v -v
 VERBOSE:=-v
 endif
+
+EM_OBJ:=$(patsubst %.c, %.o, $(EM_SRC))
+
 # test: em esw
 # 	./em esw $(VERBOSE)
 
@@ -67,10 +66,16 @@ test: em
 check: rv_test
 	./rv_test
 
-rv_test: rv_test.c rv.c
+librspd/librspd.h:
+	git submodule update --init --recursive
+
+rv.o: CFLAGS+=-Ilibrspd
+rv.o: rv.c librspd/librspd.h
+
+rv_test: rv_test.o rv.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-em: $(EM_SRC)
+em: $(EM_OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 esw: esw.c
