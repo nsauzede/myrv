@@ -31,17 +31,23 @@ It can be disbaled like this:
 ## Test it!
 ```
 $ cd em
-$ make clean all test
+$ make clean all check test
 rm -f *.o *.bin rv_test em em_esw esw elf qcheck
-cc -Wall -Werror -g -O0 -DHAVE_ELF -DHAVE_QCHECK -o rv_test rv_test.c rv.c
-cc -Wall -Werror -g -O0 -DHAVE_ELF -DHAVE_QCHECK -o em em.c em_sys.c rv.c -lelf
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK   -c -o rv_test.o rv_test.c
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK -Ilibrspd   -c -o rv.o rv.c
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK -o rv_test rv_test.o rv.o
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK   -c -o em.o em.c
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK   -c -o em_sys.o em_sys.c
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK   -c -o em_elf.o em_elf.c
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK   -c -o em_qcheck.o em_qcheck.c
+cc -Wall -Werror -g -O0 -pthread -DHAVE_ELF -DHAVE_GDBSTUB -DHAVE_QCHECK -o em em.o em_sys.o rv.o em_elf.o em_qcheck.o -lelf
 riscv32-unknown-elf-as -o em_esw.o em_esw.s
 riscv32-unknown-elf-objcopy -Obinary em_esw.o em_esw.bin
 riscv32-unknown-elf-gcc esw.c -g -O0 -fsigned-char -Ttext=0 -o esw
 riscv32-unknown-elf-gcc em_esw.o -o em_esw -nostartfiles
 ./rv_test
 RV Test OK
-./em
+./em 
 [Loaded ELF esw]
 write a1=14fc a2=c \
 Hello riscv
