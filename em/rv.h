@@ -216,6 +216,8 @@ rv_create(int api, rv_ctx_init init);
 int
 rv_destroy(rv_ctx* ctx);
 int
+rv_step(rv_ctx* ctx);
+int
 rv_execute(rv_ctx* ctx);
 void
 rv_print_regs(rv_ctx* ctx);

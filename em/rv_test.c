@@ -96,7 +96,7 @@ rv_test()
   // test bad input params
   assert(0 == rv_create(RV_API + 1, (rv_ctx_init){ 0 }));
   assert(0 == rv_create(RV_API, (rv_ctx_init){ 0 }));
-  assert(1 == rv_execute(0));
+  assert(1 == rv_step(0));
   // test good input params
   rv_ctx* ctx;
   assert(0 != (ctx = rv_create(RV_API, (rv_ctx_init){ rv_read, rv_write })));
@@ -111,40 +111,40 @@ rv_test()
   rv_write32(0x2004, -3);
   assert(1 == ctx->a0);    // test input a0
   assert(1 == ctx->x[10]); // test input a0
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00351793 == ctx->last_insn);
   assert(4 == ctx->pc); // test incremented PC
   assert(8 == ctx->a5); // test shift+move
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x40a78533 == ctx->last_insn);
   assert(8 == ctx->pc); // test incremented PC
   assert(7 == ctx->a0); // test sub+move
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00000013 == ctx->last_insn);
 
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00002537 == ctx->last_insn);
 
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00050513 == ctx->last_insn);
 
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00052283 == ctx->last_insn);
   assert(-2 == ctx->t0); // test lw
 
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00452303 == ctx->last_insn);
   assert(-3 == ctx->t1); // test lw
 
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x006283b3 == ctx->last_insn);
   assert(-5 == ctx->t2); // test add+move
 
-  assert(0 == rv_execute(ctx));
+  assert(0 == rv_step(ctx));
   assert(0x00752423 == ctx->last_insn);
   assert(-5 == rv_read32(0x2008)); // test sw
 
-  assert(1 == rv_execute(ctx));
+  assert(1 == rv_step(ctx));
   assert(0x00100073 == ctx->last_insn);
 
   assert(0 == rv_destroy(ctx));

@@ -8,6 +8,7 @@
 #include "rv.h"
 
 #ifdef HAVE_GDBSTUB
+#include <arpa/inet.h>
 #include "librspd.h"
 #endif
 
@@ -51,11 +52,17 @@ rv_print_insn(rv_ctx* ctx)
   printf("opc=%" PRIx8 "\n", i.r.opc);
 }
 
+static uint32_t
+rv_read(rv_ctx* ctx, void* dest, uint32_t addr, uint32_t len)
+{
+  return ctx->read(dest, addr, len);
+}
+
 static uint8_t
 rv_read8(rv_ctx* ctx, uint32_t addr)
 {
   uint8_t val = 0;
-  ctx->read(&val, addr, sizeof(val));
+  rv_read(ctx, &val, addr, sizeof(val));
   return val;
 }
 
@@ -63,7 +70,7 @@ static uint16_t
 rv_read16(rv_ctx* ctx, uint32_t addr)
 {
   uint16_t val = 0;
-  ctx->read(&val, addr, sizeof(val));
+  rv_read(ctx, &val, addr, sizeof(val));
   return val;
 }
 
@@ -71,7 +78,7 @@ static uint32_t
 rv_read32(rv_ctx* ctx, uint32_t addr)
 {
   uint32_t val = 0;
-  ctx->read(&val, addr, sizeof(val));
+  rv_read(ctx, &val, addr, sizeof(val));
   return val;
 }
 
@@ -91,100 +98,6 @@ static uint32_t
 rv_write32(rv_ctx* ctx, uint32_t addr, uint32_t val)
 {
   return ctx->write(&val, addr, sizeof(val));
-}
-
-static int
-rsp_question(void* user)
-{
-  void* rsp = *(void**)user;
-  char* buf = "S05";
-  rsp_send(rsp, buf, strlen(buf));
-  return 0;
-}
-
-static int
-rsp_stepi(void* user)
-{
-  rsp_question(user);
-  return 0;
-}
-
-static int
-rsp_cont(void* user)
-{
-  rsp_question(user);
-  return 0;
-}
-
-static int killed = 0;
-int
-rsp_kill(void* user)
-{
-  user = user;
-  killed = 1;
-  return 0;
-}
-
-#define LEN32 (400 * 2)
-static int
-rsp_get_regs(void* user)
-{
-  void* rsp = *(void**)user;
-  char buf[LEN32 + 1];
-  int len = LEN32;
-  memset(buf, '0', len);
-  rsp_send(rsp, buf, len);
-  return 0;
-}
-
-static int
-rsp_read_mem(void* user, size_t addr, size_t len)
-{
-  void* rsp = *(void**)user;
-  char* buf = malloc(len * 2);
-  memset(buf, '0' + (addr % 10), len * 2);
-  rsp_send(rsp, buf, len * 2);
-  return 0;
-}
-
-rv_ctx*
-rv_create(int api, rv_ctx_init init)
-{
-  if (api > RV_API)
-    return 0;
-  if (!init.read || !init.write) {
-    return 0;
-  }
-  rv_ctx* ctx = calloc(1, sizeof(rv_ctx));
-  ctx->init = init;
-#ifdef HAVE_GDBSTUB
-  if (ctx->init.rsp_port) {
-    ctx->rsp = rsp_init(&(rsp_init_t) {
-      .user = &ctx->rsp, .port = ctx->init.rsp_port,
-      .debug = ctx->init.rsp_debug, .question = rsp_question,
-      .get_regs = rsp_get_regs, .read_mem = rsp_read_mem, .stepi = rsp_stepi,
-      .cont = rsp_cont, .kill = rsp_kill,
-#if 0
-      .intr = rsp_intr,
-#endif
-    });
-  }
-#endif
-  return ctx;
-}
-
-int
-rv_destroy(rv_ctx* ctx)
-{
-  if (!ctx)
-    return 1;
-#ifdef HAVE_GDBSTUB
-  if (ctx->rsp) {
-    rsp_cleanup(ctx->rsp);
-  }
-#endif
-  free(ctx);
-  return 0;
 }
 
 int
@@ -244,7 +157,7 @@ rv_signext(int32_t val, int sbit)
   return val | sign;
 }
 
-static int
+int
 rv_step(rv_ctx* ctx)
 {
   int ret = 0;
@@ -967,6 +880,126 @@ rv_step(rv_ctx* ctx)
   return ret;
 }
 
+#ifdef HAVE_GDBSTUB
+static int
+rsp_question(void* user)
+{
+  rv_ctx* ctx = (rv_ctx*)user;
+  void* rsp = ctx->rsp;
+  char* buf = "S05";
+  rsp_send(rsp, buf, strlen(buf));
+  return 0;
+}
+
+static int
+rsp_stepi(void* user)
+{
+  rv_ctx* ctx = (rv_ctx*)user;
+  int ret = 0;
+  ret = rv_step(ctx);
+  rsp_question(ctx);
+  return ret;
+}
+
+static int
+rsp_cont(void* user)
+{
+  rv_ctx* ctx = (rv_ctx*)user;
+  int ret = 0;
+  while (1) {
+    ret = rv_step(ctx);
+    if (ret)
+      break;
+  }
+  rsp_question(ctx);
+  return ret;
+}
+
+static int killed = 0;
+int
+rsp_kill(void* user)
+{
+  user = user;
+  killed = 1;
+  return 0;
+}
+
+#define LEN32 (400 * 2)
+static int
+rsp_get_regs(void* user)
+{
+  rv_ctx* ctx = (rv_ctx*)user;
+  void* rsp = ctx->rsp;
+  char buf[LEN32 + 1];
+  int len = LEN32;
+  memset(buf, '0', len);
+  for (int i = 1; i < RV_REGS; i++) {
+    uint32_t be = htonl(ctx->x[i]);
+    sprintf(buf + 8 * i, "%08" PRIx32, be);
+  }
+  rsp_send(rsp, buf, len);
+  return 0;
+}
+
+static int
+rsp_read_mem(void* user, size_t addr, size_t len)
+{
+  rv_ctx* ctx = (rv_ctx*)user;
+  void* rsp = ctx->rsp;
+  char* buf = malloc(len * 2);
+  memset(buf, '0', len * 2);
+  unsigned char* m = malloc(len);
+  rv_read(ctx, m, addr, len);
+  for (int i = 0; i < len; i++) {
+    sprintf(buf + 2 * i, "%02x", m[i]);
+  }
+  free(m);
+  rsp_send(rsp, buf, len * 2);
+  free(buf);
+  return 0;
+}
+#endif
+
+rv_ctx*
+rv_create(int api, rv_ctx_init init)
+{
+  if (api > RV_API)
+    return 0;
+  if (!init.read || !init.write) {
+    return 0;
+  }
+  rv_ctx* ctx = calloc(1, sizeof(rv_ctx));
+  ctx->init = init;
+#ifdef HAVE_GDBSTUB
+  if (ctx->init.rsp_port) {
+    ctx->rsp = rsp_init(&(rsp_init_t) {
+      .user = ctx, .port = ctx->init.rsp_port, .debug = ctx->init.rsp_debug,
+      .question = rsp_question, .get_regs = rsp_get_regs,
+      .read_mem = rsp_read_mem, .stepi = rsp_stepi, .cont = rsp_cont,
+      .kill = rsp_kill,
+#if 0
+      .intr = rsp_intr,
+#endif
+    });
+  }
+#endif
+  return ctx;
+}
+
+int
+rv_destroy(rv_ctx* ctx)
+{
+  if (!ctx)
+    return 1;
+#ifdef HAVE_GDBSTUB
+  if (ctx->rsp) {
+    rsp_cleanup(ctx->rsp);
+  }
+#endif
+  free(ctx);
+  return 0;
+}
+
 int
 rv_execute(rv_ctx* ctx)
 {
@@ -977,7 +1010,13 @@ rv_execute(rv_ctx* ctx)
   if (ctx->rsp) {
     ret = rsp_execute(ctx->rsp);
   } else {
-    ret = rv_step(ctx);
+    while (1) {
+      // rv_print_insn(ctx);
+      ret = rv_step(ctx);
+      if (ret) {
+        break;
+      }
+    }
   }
   return ret;
 }

@@ -115,6 +115,7 @@ help(int argc, char* argv[])
   printf("  -d\tLoad dtb at 0x87e00000 length 1414 (experimental).\n");
 #ifdef HAVE_GDBSTUB
   printf("  -s\tAccept gdb connection on tcp::1235. Freeze CPU at startup.\n");
+  printf("  -g\tPrint gdb connection debug messages.\n");
 #endif
 #ifdef HAVE_QCHECK
   printf("  -q\tCompare execution with qemu+gdb.\n");
@@ -136,6 +137,7 @@ main(int argc, char* argv[])
   char* dtb_fin = 0;
 #ifdef HAVE_GDBSTUB
   int gport = 0;
+  int gdebug = 0;
 #endif
 #ifdef HAVE_QCHECK
   int do_qcheck = 0;
@@ -163,6 +165,11 @@ main(int argc, char* argv[])
     if (!strcmp(argv[arg], "-s")) {
       arg++;
       gport = 1235;
+      continue;
+    }
+    if (!strcmp(argv[arg], "-g")) {
+      arg++;
+      gdebug = 1;
       continue;
     }
 #endif
@@ -245,6 +252,7 @@ main(int argc, char* argv[])
     .csr = em_csr,
 #ifdef HAVE_GDBSTUB
     .rsp_port = gport,
+    .rsp_debug = gdebug,
 #endif
   };
   rv_ctx* ctx = rv_create(RV_API, init);
@@ -275,21 +283,24 @@ main(int argc, char* argv[])
     rv_write32(0x2000, -2);
     rv_write32(0x2004, -3);
   }
-  while (1) {
 #ifdef HAVE_QCHECK
-    if (do_qcheck) {
+  if (do_qcheck) {
+    while (1) {
       static int count = 0;
       if (qcheck(ctx)) {
         printf("[qcheck #%d failed]\n", count);
         return 1;
       }
       count++;
+      if (rv_step(ctx)) {
+        break;
+      }
     }
+  } else
 #endif
-    if (rv_execute(ctx)) {
-      break;
-    }
-  }
+    do {
+      rv_execute(ctx);
+    } while (0);
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
     printf("[qcheck PASSED]\n");
