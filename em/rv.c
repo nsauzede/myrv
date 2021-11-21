@@ -896,8 +896,8 @@ rsp_stepi(void* user)
 {
   rv_ctx* ctx = (rv_ctx*)user;
   int ret = 0;
-  ret = rv_step(ctx);
-  rsp_question(ctx);
+  rv_step(ctx);
+  ret = 1;
   return ret;
 }
 
@@ -908,7 +908,7 @@ rsp_cont(void* user)
   int ret = 0;
   while (1) {
     ret = rv_step(ctx);
-    if (ret)
+    if (ret < 0)
       break;
   }
   rsp_question(ctx);
@@ -921,6 +921,17 @@ rsp_kill(void* user)
 {
   user = user;
   killed = 1;
+  return 0;
+}
+
+static int intr = 0;
+int
+rsp_intr(void* user)
+{
+  rv_ctx* ctx = (rv_ctx*)user;
+  void* rsp = ctx->rsp;
+  intr = 1;
+  rsp_stopped(rsp);
   return 0;
 }
 
@@ -976,7 +987,7 @@ rv_create(int api, rv_ctx_init init)
       .user = ctx, .port = ctx->init.rsp_port, .debug = ctx->init.rsp_debug,
       .question = rsp_question, .get_regs = rsp_get_regs,
       .read_mem = rsp_read_mem, .stepi = rsp_stepi, .cont = rsp_cont,
-      .kill = rsp_kill,
+      .kill = rsp_kill, .intr = rsp_intr,
 #if 0
       .intr = rsp_intr,
 #endif
