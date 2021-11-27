@@ -116,7 +116,13 @@ Started adding some atomic (amoadd), fence and privileged (csrrw, wfi) insns, in
 boot the OpenSBI+Linux payload of the great [riscv_em project](https://github.com/franzflasch/riscv_em).
 Very early. Doesn't work yet. (lots of required insn missing, device tree support etc..)
 
-Can be tried like this:
+Can be tried like the folowing.
+In a first terminal:
 ```
-./em <path_to_riscv_em_linux>/fw_payload.elf -m 0x90000000 0x1000 0 -d <path_to_riscv_em>/dts/riscv_em32_linux.dtb -v
+$ ./em <path_to_riscv_em_linux>/fw_payload.elf -m 0x90000000 0x1000 0 -d <path_to_riscv_em>/dts/riscv_em32_linux.dtb -v -s
 ```
+In a second terminal:
+```
+$ riscv32-unknown-elf-gdb -q -nx -ex 'target remote 127.0.0.1:1235' -ex 'disp/i $pc' <path_to_riscv_em_linux>/fw_payload.elf
+```
+Then, Risc-V Linux boot sequence can be stepped till the first unimplemented opcode / porting issue.
