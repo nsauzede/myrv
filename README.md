@@ -4,7 +4,6 @@
 Basically a simple RV32IMA (far from complete!) emulator written from scratch (along with small test ESWs), based on the following documentation:
 - [RV specs PDF](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf)
 - [RV priv specs PDF](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMFDQC-and-Priv-v1.11/riscv-privileged-20190608.pdf)
-- [RV32I cheat sheet](https://metalcode.eu/2019-12-06-rv32i.html)
 - [RV home](https://riscv.org/technical/specifications/)
 
 Uses instrumented RISCV32 QEMU+GDB combination, to check for 100% accuracy, without looking at qemu's riscv actual implementation..
