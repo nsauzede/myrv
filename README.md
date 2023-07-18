@@ -16,6 +16,7 @@ In order to build native RISC-V esw, you must have a riscv toolchain available i
 - Make sure autoconf, GNU awk, flex, bison and texinfo are installed, E.g.:
   - `$ sudo apt install gawk flex bison texinfo`
 - `$ ./configure --prefix=$PWD/the_install --with-arch=rv32g --with-abi=ilp32d && make`
+NOTE: this process can take a long time (hours ?) and a lot of disk space (~9GB)
 
 Also the emulator uses ELF files, so the libelf dev package must be available
 - `sudo apt install libelf-dev`
@@ -23,8 +24,8 @@ Also the emulator uses ELF files, so the libelf dev package must be available
 Optionally, to use the qemu+gdb feature described below, the Qemu User RISCV tool must be installed
 - `sudo apt install qemu-user`
 
-Note that currently, ELF and qem+gdb support works only on Linux.
-It can be disbaled like this:
+Note that currently, ELF and qemu+gdb support works only on Linux.
+It can be disabled like this:
 - `make clean all check test HAVE_ELF= HAVE_QCHECK=`
 
 ## Test it!
