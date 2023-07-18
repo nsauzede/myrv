@@ -249,6 +249,7 @@ main(int argc, char* argv[])
     .write = rv_write,
     .ebreak = em_ebreak,
     .ecall = em_ecall,
+    .mret = em_mret,
     .csr = em_csr,
 #ifdef HAVE_GDBSTUB
     .rsp_port = gport,
