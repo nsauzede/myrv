@@ -731,9 +731,10 @@ rv_step(rv_ctx* ctx)
                  rv_rname(i.i.rd),
                  rv_rname(i.i.rs1),
                  i.i.imm_11_0);
-      if (i.i.rd)
-        ctx->x[i.i.rd] = ctx->pc_next;
+      uint32_t link = ctx->pc_next;
       ctx->pc_next = (rv_signext(i.i.imm_11_0, 11) + ctx->x[i.i.rs1]) & ~1;
+      if (i.i.rd)
+        ctx->x[i.i.rd] = link;
       break;
 
     case RV_SYSTEM:
