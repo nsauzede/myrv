@@ -64,7 +64,7 @@ typedef enum
   RV_SH = 0x1,
   RV_SW = 0x2,
   // SYSTEM
-  RV_PRIV = 0x0, // ECALL, EBREAK
+  RV_PRIV = 0x0, // ECALL, EBREAK, MRET
   RV_CSRRW = 0x1,
   RV_CSRRS = 0x2,
   RV_CSRRWI = 0x5,
@@ -100,6 +100,7 @@ typedef enum
   // funct12
   RV_ECALL = 0x000,
   RV_EBREAK = 0x001,
+  RV_MRET = 0x302,
 } rv_opc;
 
 typedef union
@@ -157,6 +158,7 @@ typedef uint32_t (*rv_read_cb)(void* dest, uint32_t addr, uint32_t size);
 typedef uint32_t (*rv_write_cb)(const void* src, uint32_t addr, uint32_t size);
 typedef int (*rv_ebreak_cb)(struct rv_ctx* ctx);
 typedef int (*rv_ecall_cb)(struct rv_ctx* ctx);
+typedef int (*rv_mret_cb)(struct rv_ctx* ctx);
 typedef int (*rv_csr_cb)(struct rv_ctx* ctx,
                          uint16_t csr,
                          uint32_t* inout,
@@ -171,6 +173,7 @@ typedef struct rv_ctx_init
   rv_write_cb write;
   rv_ebreak_cb ebreak;
   rv_ecall_cb ecall;
+  rv_mret_cb mret;
   rv_csr_cb csr;
 #ifdef HAVE_GDBSTUB
   int rsp_port;
@@ -189,6 +192,7 @@ typedef struct rv_ctx
       rv_write_cb write;
       rv_ebreak_cb ebreak;
       rv_ecall_cb ecall;
+      rv_mret_cb mret;
       rv_csr_cb csr;
     };
   };

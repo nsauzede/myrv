@@ -761,6 +761,14 @@ rv_step(rv_ctx* ctx)
               }
               return 1;
               break;
+            case RV_MRET:
+              log_printf(1, "MRET\n");
+              if (ctx->mret) {
+                ret = ctx->mret(ctx);
+                break;
+              }
+              return 1;
+              break;
             default:
               switch (i.r.funct7) {
                 case 0x08:
@@ -774,6 +782,7 @@ rv_step(rv_ctx* ctx)
                   }
                   break;
                 default:
+                  log_printf(1, "funct12=%" PRIx16 "\n", i.sy.funct12);
                   die();
                   return 1;
               }

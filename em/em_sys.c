@@ -31,6 +31,19 @@ int
 em_ecall(rv_ctx* ctx)
 {
   switch (ctx->a7) {
+    case 39: {// for RISCV32I arch test suite
+      log_printf(
+        1, "arch test suite termination/dump ?\n");
+      int n = 40;
+      for (int i = 0; i < n; i++) {
+      uint32_t w = 0;
+      ctx->read(&w, ctx->x[1] - (n - 1 - i) * 4 + 20, sizeof(w));
+      log_printf(
+        1, "%08" PRIx32 "\n", w);
+      }
+      return 1;
+      break;
+    }
     case 64: {
       log_printf(
         1, "write a1=%" PRIx32 " a2=%" PRIx32 " \\\n", ctx->a1, ctx->a2);
@@ -126,8 +139,24 @@ em_ecall(rv_ctx* ctx)
   return 0;
 }
 
+int
+em_mret(rv_ctx* ctx)
+{
+  log_printf(1, "MRET\n");
+//  return 1;
+  return 0;
+}
+
+static uint32_t csr_satp = 0;
+static uint32_t csr_mstatus = 0;
+static uint32_t csr_medeleg = 0;
+static uint32_t csr_mideleg = 0;
+static uint32_t csr_mie = 0;
 static uint32_t csr_mtvec = 0;
 static uint32_t csr_mscratch = 0;
+static uint32_t csr_mepc = 0;
+static uint32_t csr_pmpcfg0 = 0;
+static uint32_t csr_pmpaddr0 = 0;
 static uint32_t csr_mhartid = 0;
 
 int
@@ -136,6 +165,54 @@ em_csr(rv_ctx* ctx, uint16_t csr, uint32_t* inout, int read, int write)
   if (!inout)
     return 1;
   switch (csr) {
+    case CSR_MSTATUS: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "MSTATUS in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mstatus);
+      if (read) {
+        *inout = csr_mstatus;
+      }
+      if (write) {
+        csr_mstatus = oldin;
+      }
+      break;
+    }
+    case CSR_MEDELEG: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "MEDELEG in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_medeleg);
+      if (read) {
+        *inout = csr_medeleg;
+      }
+      if (write) {
+        csr_medeleg = oldin;
+      }
+      break;
+    }
+    case CSR_MIDELEG: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "MIDELEG in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mideleg);
+      if (read) {
+        *inout = csr_mideleg;
+      }
+      if (write) {
+        csr_mideleg = oldin;
+      }
+      break;
+    }
+    case CSR_MIE: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "MIE in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mie);
+      if (read) {
+        *inout = csr_mie;
+      }
+      if (write) {
+        csr_mie = oldin;
+      }
+      break;
+    }
     case CSR_MTVEC: {
       uint32_t oldin = *inout;
       log_printf(0, "MTVEC in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mtvec);
@@ -159,6 +236,18 @@ em_csr(rv_ctx* ctx, uint16_t csr, uint32_t* inout, int read, int write)
       }
       break;
     }
+    case CSR_MEPC: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "MEPC in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_mepc);
+      if (read) {
+        *inout = csr_mepc;
+      }
+      if (write) {
+        csr_mepc = oldin;
+      }
+      break;
+    }
     case CSR_MHARTID: {
       uint32_t oldin = *inout;
       log_printf(
@@ -168,6 +257,42 @@ em_csr(rv_ctx* ctx, uint16_t csr, uint32_t* inout, int read, int write)
       }
       if (write) {
         csr_mhartid = oldin;
+      }
+      break;
+    }
+    case CSR_SATP: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "SATP in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_satp);
+      if (read) {
+        *inout = csr_satp;
+      }
+      if (write) {
+        csr_satp = oldin;
+      }
+      break;
+    }
+    case CSR_PMPADDR0: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "PMPADDR0 in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_pmpaddr0);
+      if (read) {
+        *inout = csr_pmpaddr0;
+      }
+      if (write) {
+        csr_pmpaddr0 = oldin;
+      }
+      break;
+    }
+    case CSR_PMPCFG0: {// for RISCV32I arch test suite
+      uint32_t oldin = *inout;
+      log_printf(
+        0, "PMPCFG0 in=%" PRIx32 " out=%" PRIx32 "\n", oldin, csr_pmpcfg0);
+      if (read) {
+        *inout = csr_pmpcfg0;
+      }
+      if (write) {
+        csr_pmpcfg0 = oldin;
       }
       break;
     }
