@@ -634,7 +634,7 @@ rv_step(rv_ctx* ctx)
                      ctx->x[i.b.rs2],
                      imm);
           if (ctx->x[i.b.rs1] >= ctx->x[i.b.rs2]) {
-            ctx->pc_next = ctx->pc + imm;
+            ctx->pc_next = ctx->pc + rv_signext(imm, 12);
           }
           break;
         }
