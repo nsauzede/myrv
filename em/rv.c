@@ -244,6 +244,17 @@ rv_step(rv_ctx* ctx)
           if (i.i.rd)
             ctx->x[i.i.rd] = ctx->x[i.i.rs1] + rv_signext(i.i.imm_11_0, 11);
           break;
+        case RV_SLTI:
+          log_printf(1,
+                     "SLTI rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
+                     rv_rname(i.i.rd),
+                     i.i.funct3,
+                     rv_rname(i.i.rs1),
+                     i.i.imm_11_0);
+          if (i.i.rd)
+            ctx->x[i.i.rd] =
+              ctx->x[i.i.rs1] < (uint32_t)rv_signext(i.i.imm_11_0, 11) ? 1 : 0;
+          break;
         case RV_SLTIU:
           log_printf(1,
                      "SLTIU rd=%s funct3=%" PRIx8 " rs1=%s imm11_0=%" PRIx32,
@@ -370,6 +381,32 @@ rv_step(rv_ctx* ctx)
                 ctx->x[i.r.rd] = (rs1 * rs2) >> 32;
               }
               break;
+#endif
+            default:
+              die();
+              return 1;
+          }
+          break;
+#ifdef RV32M
+        case RV_SRL_DIVU:
+#else
+        case RV_SRL:
+#endif
+          switch (i.r.funct7) {
+            case 0x00:
+              log_printf(1,
+                         "SRL rd=%s funct3=%" PRIx8 " rs1=%s rs2=%s",
+                         rv_rname(i.r.rd),
+                         i.r.funct3,
+                         rv_rname(i.r.rs1),
+                         rv_rname(i.r.rs2));
+              if (i.r.rd)
+                ctx->x[i.r.rd] = ctx->x[i.r.rs1] >> (ctx->x[i.r.rs2] & 0x1f);
+              break;
+#ifdef RV32M
+            case RV_DIVU:
+              die();
+              return 1;
 #endif
             default:
               die();

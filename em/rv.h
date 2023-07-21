@@ -36,10 +36,12 @@ typedef enum
   RV_SLL = 0x1,
   RV_SLTU = 0x3,
   RV_XOR = 0x4,
+  RV_SRL = 0x5,
   RV_OR = 0x6,
   RV_AND = 0x7,
   // OP-IMM
   RV_ADDI = 0x0,
+  RV_SLTI = 0x2,
   RV_SLTIU = 0x3,
   RV_XORI = 0x4,
   RV_ORI = 0x6,
@@ -77,6 +79,7 @@ typedef enum
   RV_SLL_MULH = 0x1,
   RV_SLTU_MULHU = 0x3,
   RV_XOR_DIV = 0x4,
+  RV_SRL_DIVU = 0x5,
   RV_OR_REM = 0x6,
   RV_AND_REMU = 0x7,
 #endif
@@ -90,6 +93,7 @@ typedef enum
   RV_MULH = 0x01,
   RV_MULHU = 0x01,
   RV_DIV = 0x01,
+  RV_DIVU = 0x01,
   RV_REM = 0x01,
 #endif
   RV_WFI = 0x08,
