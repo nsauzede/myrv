@@ -172,18 +172,20 @@ rv_step(rv_ctx* ctx)
     return 1;
   }
 
+  static int counter = 0;
   rv_insn i;
   i.insn = ctx->last_insn;
   if (g_log >= 2) {
+    printf("%d ", counter);
     rv_print_insn(ctx);
   } else {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
-    static int counter = 0;
     log_printf(
-      1, "%d PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", counter++, ctx->pc, i.insn);
+      1, "%d PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", counter, ctx->pc, i.insn);
   }
+  counter++;
 
   switch (i.opc) {
     case RV_OP_IMM:
