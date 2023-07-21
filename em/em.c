@@ -262,12 +262,12 @@ main(int argc, char* argv[])
   ctx->sp = start_sp;
   ctx->pc = start_pc;
 
-  // TODO: Fill the stack with user asrgs/env
+  // TODO: Fill the stack with user args/env
   // until we get same final SP and stack contents as in qemu
   if (!override_sp) {
-    ctx->sp = 0x1ffff40;
-    rv_write32(ctx->sp, 1);
+    ctx->sp = 0x1ffff20;
   }
+  rv_write32(ctx->sp, 1);
 
 #ifdef HAVE_QCHECK
   if (do_qcheck) {
