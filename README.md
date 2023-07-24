@@ -111,6 +111,10 @@ pc             0x160
 [qcheck #142 failed]
 ```
 
+## Testing Riscv reference testsuite
+Some Riscv binary examples from the `rv8` reference testsuite have been included (mul, fib, sha, dry)
+Their source can be found here: https://github.com/michaeljclark/rv8/tree/master/src/test
+
 ## Booting Risc-V Linux ?
 Started adding some atomic (amoadd), fence and privileged (csrrw, wfi) insns, in order to maybe one day (??)
 boot the OpenSBI+Linux payload of the great [riscv_em project](https://github.com/franzflasch/riscv_em).
