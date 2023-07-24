@@ -157,6 +157,7 @@ rv_signext(int32_t val, int sbit)
   return val | sign;
 }
 
+unsigned long counter = 0;
 int
 rv_step(rv_ctx* ctx)
 {
@@ -172,18 +173,17 @@ rv_step(rv_ctx* ctx)
     return 1;
   }
 
-  static int counter = 0;
   rv_insn i;
   i.insn = ctx->last_insn;
   if (g_log >= 2) {
-    printf("%d ", counter);
+    printf("%lu ", counter);
     rv_print_insn(ctx);
   } else {
     if (g_log >= 1) {
       rv_print_regs(ctx);
     }
     log_printf(
-      1, "%d PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", counter, ctx->pc, i.insn);
+      1, "%lu PC 0x%08" PRIx32 " 0x%08" PRIx32 " ", counter, ctx->pc, i.insn);
   }
   counter++;
 

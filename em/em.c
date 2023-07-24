@@ -122,6 +122,7 @@ help(int argc, char* argv[])
 #endif
 }
 
+extern unsigned long counter;
 int
 main(int argc, char* argv[])
 {
@@ -310,9 +311,9 @@ main(int argc, char* argv[])
 #endif
   if (!strcmp("em_esw", esw_fin) || !strcmp("em_esw.bin", esw_fin)) {
     int val = rv_read32(0x2008);
-    printf("[Memory state at finish : %d (should be -5)]\n", val);
+    printf("[Memory state at finish : %d (should be -5) - %lu]\n", val, counter);
   } else if (!strcmp("esw", esw_fin)) {
-    printf("[A0 reg at finish : %" PRId32 " (should be -5)]\n", ctx->a0);
+    printf("[A0 reg at finish : %" PRId32 " (should be -5) - countr=%lu]\n", ctx->a0, counter);
   }
   rv_destroy(ctx);
   return 0;

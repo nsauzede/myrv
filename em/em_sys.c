@@ -6,9 +6,10 @@
 
 #include "em_sys.h"
 
+extern unsigned long counter;
 #define die()                                                                  \
   do {                                                                         \
-    printf("DIE! %s:%s:%d\n", __func__, __FILE__, __LINE__);                   \
+    printf("DIE! %s:%s:%d (counter=%lu)\n", __func__, __FILE__, __LINE__, counter);                   \
     exit(1);                                                                   \
   } while (0)
 
