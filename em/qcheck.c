@@ -147,7 +147,7 @@ qinit(rv_ctx* ctx)
     memset(buf, 0, sizeof(buf));
     if (get_line(pipe_from_gdb[0], buf, sizeof(buf)))
       break;
-    // printf("%s", buf);
+    //printf("[%s]", buf);
     char* str = buf;
     while (1) {
       char* next = strstr(str, "~\"");
@@ -155,7 +155,7 @@ qinit(rv_ctx* ctx)
         break;
       uint32_t val = 0;
       //~"ra             0
-      sscanf(next + 2, "%" SCNx32, &val);
+      sscanf(next + 16, "%" SCNx32, &val);
       if (reg == 32) {
         printf("{reg pc=%" PRIx32 "}\n", val);
 
