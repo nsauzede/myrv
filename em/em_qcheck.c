@@ -105,7 +105,7 @@ qinit(rv_ctx* ctx, char* esw)
       dup2(pipe_fromerr_gdb[1], 2);
       char* newargv[] = {
         "riscv32-unknown-elf-gdb",      "-q",  "-nx",   "-ex",
-        "target remote 127.0.0.1:1234", "esw", "-i=mi", NULL
+        "target remote 127.0.0.1:1234", esw, "-i=mi", NULL
       };
 
       execvp(newargv[0], newargv);

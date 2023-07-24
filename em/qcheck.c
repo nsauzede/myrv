@@ -1,3 +1,5 @@
+#define _GNU_SOURCE // for execvpe
+
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,12 +74,12 @@ qinit(rv_ctx* ctx)
       dup2(pipe_fromerr_qemu[1], 2);
       // qemu-riscv32 -g 1234 -s 0x200 esw&
       char* newargv[] = {
-        "/usr/bin/qemu-riscv32", "-g", "1234", "-s", "1234", "esw", NULL
+        "qemu-riscv32", "-g", "1234", "esw", NULL
       };
       char* newenviron[] = { NULL };
 
-      execve(newargv[0], newargv, newenviron);
-      perror("execve"); /* execve() returns only on error */
+      execvpe(newargv[0], newargv, newenviron);
+      perror("execvpe"); /* execvpe() returns only on error */
       exit(EXIT_FAILURE);
     }
     default:
@@ -110,20 +112,19 @@ qinit(rv_ctx* ctx)
       // riscv32-unknown-elf-gdb -q -nx -ex target\ remote\ 127.0.0.1:1234 esw
       // -i=mi
       char* newargv[] = {
-        "/home/nico/perso/git/riscv-gnu-toolchain/the_install/"
-        "bin/riscv32-unknown-elf-gdb",
+        "riscv32-unknown-elf-gdb",
         "-q",
         "-nx",
         "-ex",
-        "target remote 127.0.0.1:1234",
+        "target remote :1234",
         "esw",
         "-i=mi",
         NULL
       };
       char* newenviron[] = { NULL };
 
-      execve(newargv[0], newargv, newenviron);
-      perror("execve"); /* execve() returns only on error */
+      execvpe(newargv[0], newargv, newenviron);
+      perror("execvpe"); /* execvpe() returns only on error */
       exit(EXIT_FAILURE);
     }
     default:
@@ -187,6 +188,7 @@ qcheck(rv_ctx* ctx)
 int
 main()
 {
-  qinit(0);
+  printf("qinit returned %d\n", qinit(0));
   qcheck(0);
+  return 0;
 }
