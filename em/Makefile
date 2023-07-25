@@ -34,6 +34,8 @@ endif
 
 ifdef HAVE_QCHECK
 CFLAGS+=-DHAVE_QCHECK
+TARGET+=qcheck
+TARGET+=qcheck2
 endif
 
 all: $(TARGET)
@@ -95,7 +97,7 @@ em_esw: em_esw.o
 	riscv32-unknown-elf-objcopy -Obinary $< $@
 
 clean:
-	$(RM) *.o *.bin rv_test em em_esw esw elf qcheck
+	$(RM) *.o *.bin rv_test em em_esw esw elf qcheck qcheck2
 
 clobber: clean
 
