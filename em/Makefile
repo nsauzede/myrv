@@ -20,7 +20,8 @@ TARGET+=esw
 TARGET+=em_esw
 endif
 
-CFLAGS:=-Wall -Werror
+CFLAGS:=-Wall -Werror -Wextra
+#CFLAGS+=-Wconversion -Wsign-conversion
 CFLAGS+=-g -O0
 CFLAGS+=-pthread
 

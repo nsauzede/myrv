@@ -59,6 +59,7 @@ static int pipe_fromerr_qemu[2];
 int
 qinit(rv_ctx* ctx)
 {
+  ctx = ctx;
   pipe(pipe_to_qemu);
   pipe(pipe_from_qemu);
   pipe(pipe_fromerr_qemu);
@@ -182,6 +183,7 @@ qinit(rv_ctx* ctx)
 int
 qcheck(rv_ctx* ctx)
 {
+  ctx = ctx;
   return 1;
 }
 

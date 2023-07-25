@@ -96,6 +96,7 @@ rv_write32(uint32_t addr, uint32_t val)
 void
 help(int argc, char* argv[])
 {
+  argc = argc;
   printf("myrv/em - Simple RISC-V emulator - version %s\n", EM_VERSION);
   printf("Copyright (c) 2021 Nicolas Sauzede\n");
   printf("\n");

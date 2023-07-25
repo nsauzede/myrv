@@ -17,6 +17,7 @@ int rsp_sock = -1;
 int
 qinit(rv_ctx* ctx, char* esw)
 {
+  ctx = ctx;
   pipe(pipe_to_qemu);
   pipe(pipe_from_qemu);
   pipe(pipe_fromerr_qemu);
@@ -179,6 +180,7 @@ qcheck(rv_ctx* ctx)
 int
 qcleanup(rv_ctx* ctx)
 {
+  ctx = ctx;
   write(rsp_sock, "+$k#6b", 6);
   close(rsp_sock);
   return 0;

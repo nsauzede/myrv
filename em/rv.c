@@ -33,7 +33,7 @@ int
 rv_set_log(rv_ctx* ctx, int log)
 {
   g_log = log;
-  log_printf(1, "setting log to %d\n", log);
+  log_printf(1, "setting log to %d - ctx=%p\n", log, ctx);
   return 0;
 }
 
@@ -127,7 +127,7 @@ rv_rname(uint8_t reg)
 void
 rv_print_regs(rv_ctx* ctx)
 {
-  for (int i = 1; i < RV_REGS; i++) {
+  for (uint8_t i = 1; i < RV_REGS; i++) {
     printf("%-15s0x%-8" PRIx32 "\t%-8" PRId32 "\n",
            rv_rname(i),
            ctx->x[i],
@@ -1010,7 +1010,7 @@ rsp_read_mem(void* user, size_t addr, size_t len)
   memset(buf, '0', len * 2);
   unsigned char* m = malloc(len);
   rv_read(ctx, m, addr, len);
-  for (int i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) {
     sprintf(buf + 2 * i, "%02x", m[i]);
   }
   free(m);

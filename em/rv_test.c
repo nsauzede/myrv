@@ -9,7 +9,7 @@ static uint32_t mem2000 = 0;
 static uint32_t mem2004 = 0;
 static uint32_t mem2008 = 0;
 
-static int
+static uint32_t
 rv_write32(uint32_t addr, uint32_t val)
 {
   switch (addr) {
@@ -99,7 +99,7 @@ rv_test()
   assert(1 == rv_step(0));
   // test good input params
   rv_ctx* ctx;
-  assert(0 != (ctx = rv_create(RV_API, (rv_ctx_init){ rv_read, rv_write })));
+  assert(0 != (ctx = rv_create(RV_API, (rv_ctx_init){ .read = rv_read, .write = rv_write })));
   assert(0 == ctx->pc); // test initial PC
   assert(0 == ctx->a0); // test initial a0
   assert(0 == ctx->a5); // test initial a5
@@ -107,8 +107,8 @@ rv_test()
   assert(0 == ctx->t1); // test initial t1
   assert(0 == ctx->t2); // test initial t2
   ctx->a0 = 1;
-  rv_write32(0x2000, -2);
-  rv_write32(0x2004, -3);
+  rv_write32(0x2000, (uint32_t)-2);
+  rv_write32(0x2004, (uint32_t)-3);
   assert(1 == ctx->a0);    // test input a0
   assert(1 == ctx->x[10]); // test input a0
   assert(0 == rv_step(ctx));
@@ -130,19 +130,19 @@ rv_test()
 
   assert(0 == rv_step(ctx));
   assert(0x00052283 == ctx->last_insn);
-  assert(-2 == ctx->t0); // test lw
+  assert((uint32_t)-2 == ctx->t0); // test lw
 
   assert(0 == rv_step(ctx));
   assert(0x00452303 == ctx->last_insn);
-  assert(-3 == ctx->t1); // test lw
+  assert((uint32_t)-3 == ctx->t1); // test lw
 
   assert(0 == rv_step(ctx));
   assert(0x006283b3 == ctx->last_insn);
-  assert(-5 == ctx->t2); // test add+move
+  assert((uint32_t)-5 == ctx->t2); // test add+move
 
   assert(0 == rv_step(ctx));
   assert(0x00752423 == ctx->last_insn);
-  assert(-5 == rv_read32(0x2008)); // test sw
+  assert((uint32_t)-5 == rv_read32(0x2008)); // test sw
 
   assert(1 == rv_step(ctx));
   assert(0x00100073 == ctx->last_insn);

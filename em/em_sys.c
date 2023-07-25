@@ -24,6 +24,7 @@ static int g_log = 1;
 int
 em_ebreak(rv_ctx* ctx)
 {
+  ctx = ctx;
   log_printf(1, "BREAK\n");
   return 1;
 }
@@ -143,6 +144,7 @@ em_ecall(rv_ctx* ctx)
 int
 em_mret(rv_ctx* ctx)
 {
+  ctx = ctx;
   log_printf(1, "MRET\n");
 //  return 1;
   return 0;
@@ -163,6 +165,7 @@ static uint32_t csr_mhartid = 0;
 int
 em_csr(rv_ctx* ctx, uint16_t csr, uint32_t* inout, int read, int write)
 {
+  ctx = ctx;
   if (!inout)
     return 1;
   switch (csr) {
