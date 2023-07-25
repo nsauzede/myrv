@@ -65,7 +65,8 @@ qinit(rv_ctx* ctx)
   close(pipe_from_qemu[1]);
   close(pipe_fromerr_qemu[1]);
   printf("{qpid is %d}\n", qpid);
-  sleep(1);     // FIXME: find better way to wait for spawned RSP server (qemu) to be ready
+  sleep(1); // FIXME: find better way to wait for spawned RSP server (qemu) to
+            // be ready
   int rsp_sock;
   struct sockaddr_in sa;
   rsp_sock = socket(PF_INET, SOCK_STREAM, 0);

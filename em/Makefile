@@ -49,7 +49,8 @@ EM_SRC+=em_elf.c
 endif
 
 ifdef HAVE_QCHECK
-EM_SRC+=em_qcheck.c
+#EM_SRC+=em_qcheck.c
+EM_SRC+=em_qcheck2.c
 endif
 
 ifdef V
