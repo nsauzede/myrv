@@ -82,21 +82,26 @@ rv_test: rv_test.o rv.o
 em: $(EM_OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
+#RISCV_PREFIX:=riscv32-unknown-elf-
+RISCV_PREFIX:=riscv64-unknown-elf-
+#RV_FLAGS:=-march=rv32g -mabi=ilp32d
+#RV_FLAGS:=-march=rv64g -mabi=lp64d
+RV_FLAGS:=-march=rv32im -mabi=ilp32
 esw: esw.c
-#	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
-	riscv32-unknown-elf-gcc $< -g -O0 -fsigned-char -Ttext=0 -o $@
+#	$(RISCV_PREFIX)gcc $< -g -O0 -fsigned-char -Ttext=0 -o esw -nostartfiles
+	$(RISCV_PREFIX)gcc $< -g -O0 -fsigned-char -Ttext=0 -o $@ $(RV_FLAGS)
 
 esw.bin: esw
-	riscv32-unknown-elf-objcopy -Obinary esw $@
+	$(RISCV_PREFIX)objcopy -Obinary esw $@
 
 em_esw: em_esw.o
-	riscv32-unknown-elf-gcc $< -o $@ -nostartfiles
+	$(RISCV_PREFIX)gcc $< -o $@ -nostartfiles $(RV_FLAGS)
 
 %.o: %.s
-	riscv32-unknown-elf-as -o $@ $<
+	$(RISCV_PREFIX)as -o $@ $< $(RV_FLAGS)
 
 %.bin: %.o
-	riscv32-unknown-elf-objcopy -Obinary $< $@
+	$(RISCV_PREFIX)objcopy -Obinary $< $@
 
 clean:
 	$(RM) *.o *.bin rv_test em em_esw esw elf qcheck qcheck2
@@ -104,4 +109,3 @@ clean:
 clobber: clean
 
 mrproper: clobber
-	$(RM) -Rf librspd
