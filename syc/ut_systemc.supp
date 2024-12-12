@@ -1,0 +1,53 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*sc_core14sc_module_name*
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:*tlm*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znam
+   fun:_ZN5sc_dt9scfx_mant10alloc_wordEm
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_ZN7sc_core8sc_startEv
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_ZN7sc_core13sc_simcontext17do_sc_stop_actionEv
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_ZN7sc_core14sc_event_timed8allocateEv
+   fun:_ZN7sc_core4waitERKNS_7sc_timeEPNS_13sc_simcontextE
+   fun:_ZN7sc_core9sc_module4waitERKNS_7sc_timeE
+   fun:_ZN9Processor18fetch_instructionsEv
+   fun:_ZN7sc_core16sc_thread_cor_fnEPv
+   ...
+   fun:_ZNK7sc_core14sc_vector_base17report_empty_bindEPKcb.cold
+}
